@@ -46,10 +46,10 @@ from keras import backend as K
 # dimensions of our images.
 img_width, img_height = 40, 40
 
-train_data_dir = 'data_augmentation_output\\train'
-validation_data_dir = 'data_augmentation_output\\validate'
+train_data_dir = 'data\data_augmentation_output\\train'
+validation_data_dir = 'data\data_augmentation_output\\validate'
 nb_train_samples = 2000
-nb_validation_samples = 400
+nb_validation_samples = 600
 epochs = 50
 batch_size = 16
 
@@ -59,6 +59,9 @@ else:
     input_shape = (img_width, img_height, 3)
 
 model = Sequential()
+# 32 filtros/kernels con tamaño 3x3?
+## 3x3 conv with 3 output channels (same as input channels)
+## y = Conv2D(3, (3, 3), padding='same')(x)
 model.add(Conv2D(32, (3, 3), input_shape=input_shape))
 model.add(Activation('relu'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
@@ -75,11 +78,11 @@ model.add(Flatten())
 model.add(Dense(64))
 model.add(Activation('relu'))
 model.add(Dropout(0.5))
-model.add(Dense(1))
+model.add(Dense(1))#ERROR AQUI
 model.add(Activation('sigmoid'))
 
-model.compile(loss='mean_squared_logarithmic_error', #cambiado para mostrar valores proporcionales 
-              optimizer='rmsprop',
+model.compile(loss='binary_crossentropy',
+              optimizer='sgd',
               metrics=['accuracy'])
 
 # this is the augmentation configuration we will use for training
@@ -120,4 +123,4 @@ print(eval)
 
 
 "model.save_weights('first_try.h5')"
-model.save('my_model_v2.h5')
+model.save('my_model_v4.h5')

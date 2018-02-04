@@ -17,4 +17,4 @@ p_validate.rotate(probability=1.0, max_left_rotation=5, max_right_rotation=10)
 
 
 p_train.sample(2000)
-p_validate.sample(400)
+p_validate.sample(600)
