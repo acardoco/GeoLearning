@@ -73,6 +73,12 @@
 			<artifactId>ozark</artifactId>
 			<version>1.0.0-m02</version>
 		</dependency>
+		<!-- KERAS -->
+		<dependency>
+			<groupId>org.deeplearning4j</groupId>
+			<artifactId>deeplearning4j-keras</artifactId>
+			<version>0.9.1</version>
+		</dependency>
 
 	</dependencies>
 
