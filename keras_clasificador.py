@@ -42,12 +42,14 @@ from keras.layers import Conv2D, MaxPooling2D
 from keras.layers import Activation, Dropout, Flatten, Dense
 from keras import backend as K
 
+import numpy as np 
+
 
 # dimensions of our images.
 img_width, img_height = 40, 40
 
-train_data_dir = 'data\data_augmentation_output\\train'
-validation_data_dir = 'data\data_augmentation_output\\validate'
+train_data_dir = 'data\\train'
+validation_data_dir = 'data\\validate'
 nb_train_samples = 2000
 nb_validation_samples = 600
 epochs = 50
@@ -75,11 +77,9 @@ model.add(Activation('relu'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
 
 model.add(Flatten())
-model.add(Dense(64))
-model.add(Activation('relu'))
+model.add(Dense(256, activation='relu'))
 model.add(Dropout(0.5))
-model.add(Dense(1))#ERROR AQUI
-model.add(Activation('sigmoid'))
+model.add(Dense(len(np.load('class_indices.npy').item()),  activation='sigmoid'))
 
 model.compile(loss='binary_crossentropy',
               optimizer='sgd',
@@ -101,13 +101,13 @@ train_generator = train_datagen.flow_from_directory(
     train_data_dir,
     target_size=(img_width, img_height),
     batch_size=batch_size,
-    class_mode='binary')
+    class_mode='categorical')
 
 validation_generator = test_datagen.flow_from_directory(
     validation_data_dir,
     target_size=(img_width, img_height),
     batch_size=batch_size,
-    class_mode='binary')
+    class_mode='categorical')
 
 model.fit_generator(
     train_generator,
