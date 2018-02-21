@@ -7,7 +7,7 @@ import skimage.data
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from keras.preprocessing.image import img_to_array, load_img 
-from keras.models import Sequential  
+from keras.models import Sequential, load_model
 from keras.layers import Dropout, Flatten, Dense 
 from keras import applications 
 import selectivesearch
@@ -21,34 +21,32 @@ ciudadespath = 'pruebas/ciudades/ciudad6.jpg'
 top_model_weights_path = 'bottleneck_fc_model.h5' 
 size = 40, 40
 
+# load the class_indices saved in the earlier step
+model_clasificador = load_model('my_model_v4.h5')
+
+# build the VGG16 network
+model_vgg16 = applications.VGG16(include_top=False, weights='imagenet')
+
+# load the class_indices saved in the earlier step
+class_dictionary = np.load('class_indices.npy').item()
+
 def load_image( infilename ) :
     img = Image.open( infilename )
     img.load()
     data = np.asarray( img, dtype="uint8" )
     return data
 
-    '''#-----ejemplo BORRAR LUEGO
-    im = Image.open(ciudadespath)
-    crop_rectangle = (66, 0, 31+66, 16)
-    cropped_im = im.crop(crop_rectangle)
-    cropped_im.show()
-    #----'''
-
 #--------------------------------------------------------------------
 #--------------------------------------------------------------------
 #funcion para predecir varias imagenes a partir de un directorio dado
 #--------------------------------------------------------------------
 #--------------------------------------------------------------------
-def predictMultiple( x, y, w, h):
-    # load the class_indices saved in the earlier step
-    class_dictionary = np.load('class_indices.npy').item()
+def predictMultiple_vgg16(image_sat, x, y, w, h):
 
     num_classes = len(class_dictionary)
 
-    #print("[INFO] loading and preprocessing image...")
-    image = load_img(ciudadespath)
     crop_rectangle = (x, y, w + x , h + y)
-    image = image.crop(crop_rectangle)
+    image = image_sat.crop(crop_rectangle)
     image = image.resize(size)
     image = img_to_array(image)
 
@@ -57,11 +55,8 @@ def predictMultiple( x, y, w, h):
 
     image = np.expand_dims(image, axis=0)
 
-    # build the VGG16 network
-    model = applications.VGG16(include_top=False, weights='imagenet')
-
     # get the bottleneck prediction from the pre-trained VGG16 model
-    bottleneck_prediction = model.predict(image)
+    bottleneck_prediction = model_vgg16.predict(image)
 
     # build top model
     model = Sequential()
@@ -82,11 +77,27 @@ def predictMultiple( x, y, w, h):
 
     print ("inID",class_predicted[0],"probabilities",probabilities[0])
 
+def predictMultiple_clasificador(image_sat, x, y, w, h):
+
+    crop_rectangle = (x, y, w + x , h + y)
+    image = image_sat.crop(crop_rectangle)
+    image = image.resize(size)
+    image = img_to_array(image)
+
+    # important! otherwise the predictions will be '0'
+    image = image / 255
+
+    image = np.expand_dims(image, axis=0)
+    preds = model_clasificador.predict_classes(image)
+    probabilities = model_clasificador.predict_proba(image)
+    print('Predicted:', preds)
+
 
 def main():
 
    # loading astronaut image
     img = load_image(ciudadespath)
+
     im_clasiffier = Image.open(ciudadespath)
 
     # perform selective search
@@ -106,11 +117,13 @@ def main():
             continue
         # distorted rects
         x, y, w, h = r['rect']
+
         if w / h > 1.2 or h / w > 1.2:
             continue
-        if i < 10:
+        #número de regiones a pasar el clasificador
+        if i < 200:
             #calling the clasiffier
-            predictMultiple(x, y, w, h)
+            predictMultiple_vgg16(im_clasiffier,x, y, w, h)
         i += 1
         candidates.add(r['rect'])
 

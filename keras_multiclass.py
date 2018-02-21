@@ -158,6 +158,7 @@ def train_top_model():
                         validation_data=(validation_data, validation_labels))
 
     model.save_weights(top_model_weights_path)
+    model.save('multiclass.h5')
 
     (eval_loss, eval_accuracy) = model.evaluate(
         validation_data, validation_labels, batch_size=batch_size, verbose=1)
@@ -251,6 +252,10 @@ def predict():
     print('Todas las probabilidades', probabilities[0])
     print('Probabilidad mayor', probabilities[0][inID])
 
+
+save_bottlebeck_features()
+train_top_model()
+#predict()
 
 cv2.destroyAllWindows()
 
