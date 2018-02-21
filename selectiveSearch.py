@@ -30,17 +30,26 @@ model_vgg16 = applications.VGG16(include_top=False, weights='imagenet')
 # load the class_indices saved in the earlier step
 class_dictionary = np.load('class_indices.npy').item()
 
+#carga la imagen para el algoritmo de selective search
 def load_image( infilename ) :
     img = Image.open( infilename )
     img.load()
     data = np.asarray( img, dtype="uint8" )
     return data
 
-#--------------------------------------------------------------------
-#--------------------------------------------------------------------
-#funcion para predecir varias imagenes a partir de un directorio dado
-#--------------------------------------------------------------------
-#--------------------------------------------------------------------
+def is_Valid(prob):
+
+    valido = False
+    if prob > 0.90:
+        valido = True
+    return valido
+
+
+#----------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------
+#Función que a partir de unas coordenadas emplea el clasificador que tiene como base VGG16
+#----------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------
 def predictMultiple_vgg16(image_sat, x, y, w, h):
 
     num_classes = len(class_dictionary)
@@ -67,16 +76,30 @@ def predictMultiple_vgg16(image_sat, x, y, w, h):
 
     model.load_weights(top_model_weights_path)
 
-    # use the bottleneck prediction on the top model to get the final
-    # classification
+    # obtener resultados
     class_predicted = model.predict_classes(bottleneck_prediction)
 
     probabilities = model.predict_proba(bottleneck_prediction)
 
     inID = class_predicted[0]
 
+
+    inv_map = {v: k for k, v in class_dictionary.items()}
+
+    print('Classes: ', inv_map)
+
+    label = inv_map[inID]
+
+    # get the prediction label
+    print("Image ID: {}, Label: {}".format(inID, label))
+
     print ("inID",class_predicted[0],"probabilities",probabilities[0])
 
+#----------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------
+#Función que emplea el clasificador con redes convolucionales puestas manualmente
+#----------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------
 def predictMultiple_clasificador(image_sat, x, y, w, h):
 
     crop_rectangle = (x, y, w + x , h + y)
@@ -88,21 +111,36 @@ def predictMultiple_clasificador(image_sat, x, y, w, h):
     image = image / 255
 
     image = np.expand_dims(image, axis=0)
-    preds = model_clasificador.predict_classes(image)
+    class_predicted = model_clasificador.predict_classes(image)
     probabilities = model_clasificador.predict_proba(image)
-    print('Predicted:', preds)
 
+    inID = class_predicted[0]
+
+    inv_map = {v: k for k, v in class_dictionary.items()}
+
+    # print('Classes: ', inv_map)
+
+    label = inv_map[inID]
+
+    if is_Valid(probabilities[0][inID]):
+        # get the prediction label
+        print("Image ID: {}, Label: {}".format(inID, label))
+
+        print("Label", label, "probabilities", probabilities[0])
+
+    return label, probabilities[0][inID]
 
 def main():
 
    # loading astronaut image
     img = load_image(ciudadespath)
 
+    #imagen que emplearán los clasificadores
     im_clasiffier = Image.open(ciudadespath)
 
     # perform selective search
     img_lbl, regions = selectivesearch.selective_search(
-        img, scale=300, sigma=0.5, min_size=10)
+        img, scale=200, sigma=0.5, min_size=10)
 
     candidates = set()  
 
@@ -120,20 +158,22 @@ def main():
 
         if w / h > 1.2 or h / w > 1.2:
             continue
-        #número de regiones a pasar el clasificador
-        if i < 200:
-            #calling the clasiffier
-            predictMultiple_vgg16(im_clasiffier,x, y, w, h)
+        #calling the clasiffier
+        label, prob = predictMultiple_clasificador(im_clasiffier,x, y, w, h)
+
+        #si cumple con el mínimo de prob, se añade a candidatos
+        if is_Valid(prob):
+            candidates.add(r['rect'])
         i += 1
-        candidates.add(r['rect'])
+
 
     end = time.time()
     print("tiempo procesamiento: ", end - start) 
 
     
 
-    print("Regiones seleccionadas:",candidates.__len__())
-    print("Regiones clasificadas:",i)
+    print("Regiones seleccionadas:", i)
+    print("Regiones clasificadas:",candidates.__len__())
     
     # draw rectangles on the original image
     fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(6, 6))

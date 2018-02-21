@@ -1,40 +1,8 @@
-'''This script goes along the blog post
-"Building powerful image classification models using very little data"
-from blog.keras.io.
-It uses data that can be downloaded at:
-https://www.kaggle.com/c/dogs-vs-cats/data
-In our setup, we:
-- created a data/ folder
-- created train/ and validation/ subfolders inside data/
-- created cats/ and dogs/ subfolders inside train/ and validation/
-- put the cat pictures index 0-999 in data/train/cats
-- put the cat pictures index 1000-1400 in data/validation/cats
-- put the dogs pictures index 12500-13499 in data/train/dogs
-- put the dog pictures index 13500-13900 in data/validation/dogs
-So that we have 1000 training examples for each class, and 400 validation examples for each class.
-In summary, this is our directory structure:
-```
-data/
-    train/
-        dogs/
-            dog001.jpg
-            dog002.jpg
-            ...
-        cats/
-            cat001.jpg
-            cat002.jpg
-            ...
-    validation/
-        dogs/
-            dog001.jpg
-            dog002.jpg
-            ...
-        cats/
-            cat001.jpg
-            cat002.jpg
-            ...
-```
-'''
+#***************************************
+#***************************************
+# Multiclasificador para piscina, rotonda y parking
+#***************************************
+#***************************************
 
 from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential
@@ -44,59 +12,80 @@ from keras import backend as K
 
 import numpy as np 
 
-
-# dimensions of our images.
+#***************************************
+# Dimensiones generales de las imagenes
+#***************************************
 img_width, img_height = 40, 40
 
-train_data_dir = 'data\\train'
-validation_data_dir = 'data\\validate'
+#***************************************
+# Parámetros generales
+#***************************************
+train_data_dir = 'data\\data_augmentation_output\\train'
+validation_data_dir = 'data\\data_augmentation_output\\validate'
 nb_train_samples = 2000
 nb_validation_samples = 600
 epochs = 50
 batch_size = 16
 
+#***************************************
+# Ajusta las dimensiones en función del orden en el que aparezca el "canal"
+#***************************************
 if K.image_data_format() == 'channels_first':
     input_shape = (3, img_width, img_height)
 else:
     input_shape = (img_width, img_height, 3)
 
+#***************************************
+# Modelo creado con Keras con 4 Convs, 2 MaxPools y una FC al final
+#***************************************
+
 model = Sequential()
-# 32 filtros/kernels con tamaño 3x3?
-## 3x3 conv with 3 output channels (same as input channels)
-## y = Conv2D(3, (3, 3), padding='same')(x)
+
+# 32 filtros/kernels con tamaño 3x3
 model.add(Conv2D(32, (3, 3), input_shape=input_shape))
 model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
+# Esta capa ayuda a evitar overfitting
+model.add(Dropout(0.5))
 
 model.add(Conv2D(32, (3, 3)))
 model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(MaxPooling2D(pool_size=(4, 4)))
 
 model.add(Conv2D(64, (3, 3)))
 model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.5))
+
+model.add(Conv2D(64, (3, 3)))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(4, 4)))
 
 model.add(Flatten())
-model.add(Dense(256, activation='relu'))
+model.add(Dense(512, activation='relu'))
 model.add(Dropout(0.5))
 model.add(Dense(len(np.load('class_indices.npy').item()),  activation='sigmoid'))
 
-model.compile(loss='binary_crossentropy',
-              optimizer='sgd',
+#***************************************
+# Se indica la función de error, optimizador y métrica a mostrar
+# "categorical" es para indicar que va a haber más de dos clases
+#***************************************
+model.compile(loss='categorical_crossentropy',
+              optimizer='adam',
               metrics=['accuracy'])
 
-# this is the augmentation configuration we will use for training
+#***************************************
+# Como es un dataset de imágenes se emplea una clase especial de Keras que permite, entre otras cosas, DataAugmentation
+#***************************************
+
 train_datagen = ImageDataGenerator(
-    #rescale=1. / 255,
+    rescale=1. / 255,
     shear_range=0.2,
     zoom_range=0.2,
     horizontal_flip=True)
 
-# this is the augmentation configuration we will use for testing:
-# only rescaling
-test_datagen = ImageDataGenerator()
-#test_datagen = ImageDataGenerator(rescale=1. / 255)
+# Se reescala las imágenes para pasarlas de que valgan entre 0-255 (RGB) a que tomen valores entre 0-1
+test_datagen = ImageDataGenerator(rescale=1. / 255)
 
+# Se "inyectan" los datasets
 train_generator = train_datagen.flow_from_directory(
     train_data_dir,
     target_size=(img_width, img_height),
@@ -108,7 +97,9 @@ validation_generator = test_datagen.flow_from_directory(
     target_size=(img_width, img_height),
     batch_size=batch_size,
     class_mode='categorical')
-
+#***************************************
+# Aquí se compila y entrena el modelo creado
+#***************************************
 model.fit_generator(
     train_generator,
     steps_per_epoch=nb_train_samples // batch_size,
@@ -116,11 +107,21 @@ model.fit_generator(
     validation_data=validation_generator,
     validation_steps=nb_validation_samples // batch_size)
 
-
+#***************************************
+# Se evaluan los resultados
+#***************************************
 eval = model.evaluate_generator(validation_generator, 600)
 print(model.metrics_names)
 print(eval)
 
 
-"model.save_weights('first_try.h5')"
+#***************************************
+# Se guarda el modelo. Resultados última ejecución:
+'''
+['loss', 'acc']
+[0.07733457211566154, 0.97362869198312241]
+'''
+#***************************************
 model.save('my_model_v4.h5')
+
+

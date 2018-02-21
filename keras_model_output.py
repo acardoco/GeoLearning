@@ -12,7 +12,7 @@ model = load_model('my_model_v4.h5')
 # load the class_indices saved in the earlier step
 class_dictionary = np.load('class_indices.npy').item()
 
-image_path = 'pruebas\\imag\\rotonda2.png'
+image_path = 'pruebas\\imag\\parking2.png'
 orig = cv2.imread(image_path)
 print("[INFO] loading and preprocessing image...")
 image = load_img(image_path, target_size=(40,40))
