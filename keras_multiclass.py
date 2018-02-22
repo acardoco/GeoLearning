@@ -47,7 +47,7 @@ import cv2
 
 
 # dimensions of our images.
-img_width, img_height = 40, 40
+img_width, img_height = 48, 48
 
 top_model_weights_path = 'bottleneck_fc_model.h5' 
 
@@ -259,3 +259,7 @@ train_top_model()
 
 cv2.destroyAllWindows()
 
+'''
+16/90 [====>.........................] - ETA: 0s[INFO] accuracy: 94.44%
+[INFO] Loss: 0.1255592983885486
+'''

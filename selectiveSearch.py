@@ -20,6 +20,7 @@ import time
 ciudadespath = 'pruebas/ciudades/ciudad6.jpg'
 top_model_weights_path = 'bottleneck_fc_model.h5' 
 size = 48, 48
+prob_minima = 0.9
 
 # load the class_indices saved in the earlier step
 model_clasificador = load_model('my_model_v4.h5')
@@ -46,7 +47,7 @@ def is_Valid(prob):
 
     valores = 0
 
-    if max(prob) > 0.9:
+    if max(prob) > prob_minima:
         for ele in prob:
             if ele < 0.00001:
                 valores += 1
