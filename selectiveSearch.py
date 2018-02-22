@@ -19,10 +19,13 @@ import time
 #general parametters
 ciudadespath = 'pruebas/ciudades/ciudad6.jpg'
 top_model_weights_path = 'bottleneck_fc_model.h5' 
-size = 40, 40
+size = 48, 48
 
 # load the class_indices saved in the earlier step
 model_clasificador = load_model('my_model_v4.h5')
+
+# fine tuning model
+model_fine = load_model('fine_tuning.h5')
 
 # build the VGG16 network
 model_vgg16 = applications.VGG16(include_top=False, weights='imagenet')
@@ -40,8 +43,17 @@ def load_image( infilename ) :
 def is_Valid(prob):
 
     valido = False
-    if prob > 0.90:
+
+    valores = 0
+
+    if max(prob) > 0.9:
+        for ele in prob:
+            if ele < 0.00001:
+                valores += 1
+
+    if valores == 2:
         valido = True
+
     return valido
 
 
@@ -86,14 +98,51 @@ def predictMultiple_vgg16(image_sat, x, y, w, h):
 
     inv_map = {v: k for k, v in class_dictionary.items()}
 
-    print('Classes: ', inv_map)
+    label = inv_map[inID]
+
+    if is_Valid(probabilities[0]):
+        # get the prediction label
+        print("Image ID: {}, Label: {}".format(inID, label))
+
+        print("Label", label, "probabilities", probabilities[0],"-coordenadas: ",crop_rectangle)
+
+    return label, probabilities[0]
+
+#----------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------
+#Función que emplea la técnica de Fine Tuning
+#----------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------
+def predictMultiple_fine(image_sat, x, y, w, h):
+
+    crop_rectangle = (x, y, w + x , h + y)
+    image = image_sat.crop(crop_rectangle)
+    image = image.resize(size)
+    image = img_to_array(image)
+
+    # important! otherwise the predictions will be '0'
+    image = image / 255
+
+    image = np.expand_dims(image, axis=0)
+
+    probabilities = model_fine.predict(image)
+    class_predicted = probabilities.argmax(axis=-1)
+
+    inID = class_predicted[0]
+
+    inv_map = {v: k for k, v in class_dictionary.items()}
+
+    # print('Classes: ', inv_map)
 
     label = inv_map[inID]
 
-    # get the prediction label
-    print("Image ID: {}, Label: {}".format(inID, label))
+    if is_Valid(probabilities[0]):
+        # get the prediction label
+        print("Image ID: {}, Label: {}".format(inID, label))
 
-    print ("inID",class_predicted[0],"probabilities",probabilities[0])
+        print("Label", label, "probabilities", probabilities[0],"-coordenadas: ",crop_rectangle)
+
+    return label, probabilities[0]
 
 #----------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------
@@ -122,13 +171,13 @@ def predictMultiple_clasificador(image_sat, x, y, w, h):
 
     label = inv_map[inID]
 
-    if is_Valid(probabilities[0][inID]):
+    if is_Valid(probabilities[0]):
         # get the prediction label
         print("Image ID: {}, Label: {}".format(inID, label))
 
-        print("Label", label, "probabilities", probabilities[0])
+        print("Label", label, "probabilities", probabilities[0],"-coordenadas: ",crop_rectangle)
 
-    return label, probabilities[0][inID]
+    return label, probabilities[0]
 
 def main():
 
@@ -159,12 +208,14 @@ def main():
         if w / h > 1.2 or h / w > 1.2:
             continue
         #calling the clasiffier
-        label, prob = predictMultiple_clasificador(im_clasiffier,x, y, w, h)
+        label, prob = predictMultiple_fine(im_clasiffier,x, y, w, h)
 
         #si cumple con el mínimo de prob, se añade a candidatos
         if is_Valid(prob):
             candidates.add(r['rect'])
         i += 1
+        if (i % 100 == 0):
+            print ("Regiones revisadas: ", i)
 
 
     end = time.time()

@@ -15,7 +15,7 @@ import numpy as np
 #***************************************
 # Dimensiones generales de las imagenes
 #***************************************
-img_width, img_height = 40, 40
+img_width, img_height = 48, 48
 
 #***************************************
 # Parámetros generales
@@ -26,6 +26,7 @@ nb_train_samples = 2000
 nb_validation_samples = 600
 epochs = 50
 batch_size = 16
+num_classes = len(np.load('class_indices.npy').item())
 
 #***************************************
 # Ajusta las dimensiones en función del orden en el que aparezca el "canal"
@@ -62,7 +63,7 @@ model.add(MaxPooling2D(pool_size=(4, 4)))
 model.add(Flatten())
 model.add(Dense(512, activation='relu'))
 model.add(Dropout(0.5))
-model.add(Dense(len(np.load('class_indices.npy').item()),  activation='sigmoid'))
+model.add(Dense(num_classes,  activation='sigmoid'))
 
 #***************************************
 # Se indica la función de error, optimizador y métrica a mostrar
@@ -118,10 +119,15 @@ print(eval)
 #***************************************
 # Se guarda el modelo. Resultados última ejecución:
 '''
+40x40:
 ['loss', 'acc']
 [0.07733457211566154, 0.97362869198312241]
+
+48x48:
+['loss', 'acc']
+[0.11062831397233178, 0.97151898734177211]
 '''
 #***************************************
-model.save('my_model_v4.h5')
+model.save('my_model_v4_48x48.h5')
 
 
