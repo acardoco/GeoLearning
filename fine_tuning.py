@@ -85,8 +85,9 @@ def train_modelo():
     # Se instancia una clase tipo "Model", añadiendo top_model encima de model_vgg
     model = Model(inputs=model_vgg.input, outputs=top_model(model_vgg.output))
 
-    # Se "congelan" las 25 primeras capas para que no sean entrenadas
-    for layer in model.layers[:25]:
+    # Se "congelan" las 15 primeras capas para que no sean entrenadas:
+    # 18 capas tiene vgg16 sin las FC del tope, por lo que habrá que quitar las 3 ultimas que son conv para hacer fine-tuning (18 - 3 = 15)
+    for layer in model.layers[:15]:
         layer.trainable = False
 
     # Se compila
@@ -176,6 +177,11 @@ def predict_modelo():
 
     # get the prediction label
     print("Image ID: {}, Label: {}".format(inID, label))
+
+    model_vgg = applications.VGG16(weights='imagenet', include_top=False, input_shape=(img_width, img_height, 3))
+
+    for i,layer in enumerate(model_vgg.layers):
+        print(i, layer.name, layer.output_shape)
 
  #***********************************
  #***********************************
