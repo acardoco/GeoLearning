@@ -20,7 +20,7 @@ import time
 ciudadespath = 'pruebas/ciudades/ciudad6.jpg'
 top_model_weights_path = 'bottleneck_fc_model.h5' 
 size = 48, 48
-prob_minima = 0.95
+prob_minima = 0.9
 
 # load the class_indices saved in the earlier step
 model_clasificador = load_model('my_model_v4.h5')
@@ -54,6 +54,24 @@ def is_Valid(prob):
 
     if valores == 2:
         valido = True
+
+    return valido
+
+def is_Valid(prob, label):
+
+    valido = True
+
+    valores = 0
+
+    '''if max(prob) > prob_minima:
+        for ele in prob:
+            if ele < 0.00001:
+                valores += 1
+
+    if valores == 2:
+        valido = True'''
+    if label == 'parking':
+        valido = False
 
     return valido
 
@@ -137,7 +155,7 @@ def predictMultiple_fine(image_sat, x, y, w, h):
 
     label = inv_map[inID]
 
-    if is_Valid(probabilities[0]):
+    if is_Valid(probabilities[0],label):
         # get the prediction label
         print("Image ID: {}, Label: {}".format(inID, label))
 
@@ -172,7 +190,7 @@ def predictMultiple_clasificador(image_sat, x, y, w, h):
 
     label = inv_map[inID]
 
-    if is_Valid(probabilities[0]):
+    if is_Valid(probabilities[0],label):
         # get the prediction label
         print("Image ID: {}, Label: {}".format(inID, label))
 
@@ -189,8 +207,11 @@ def main():
     im_clasiffier = Image.open(ciudadespath)
 
     # perform selective search
+    start_s = time.time()
     img_lbl, regions = selectivesearch.selective_search(
-        img, scale=200, sigma=0.5, min_size=10)
+        img, scale=200, sigma=0.6, min_size=5)
+    end_s = time.time()
+
 
     candidates = set()  
 
@@ -212,7 +233,7 @@ def main():
         label, prob = predictMultiple_fine(im_clasiffier,x, y, w, h)
 
         #si cumple con el mínimo de prob, se añade a candidatos
-        if is_Valid(prob):
+        if is_Valid(prob,label):
             candidates.add(r['rect'])
         i += 1
         if (i % 100 == 0):
@@ -220,6 +241,9 @@ def main():
 
 
     end = time.time()
+
+
+    print("tiempo procesamiento selective search: ", end_s - start_s)
     print("tiempo procesamiento: ", end - start) 
 
     
