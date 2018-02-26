@@ -20,7 +20,7 @@ import time
 ciudadespath = 'pruebas/ciudades/ciudad6.jpg'
 top_model_weights_path = 'bottleneck_fc_model.h5' 
 size = 48, 48
-prob_minima = 0.9
+prob_minima = 0.95
 
 # load the class_indices saved in the earlier step
 model_clasificador = load_model('my_model_v4.h5')

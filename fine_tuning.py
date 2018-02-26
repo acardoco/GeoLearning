@@ -25,7 +25,7 @@ img_width, img_height = 48, 48
 train_data_dir = 'data\\data_augmentation_output\\train'
 validation_data_dir = 'data\\data_augmentation_output\\validate'
 nb_train_samples = 2000
-nb_validation_samples = 60
+nb_validation_samples = 600
 epochs = 50
 batch_size = 16
 num_classes = len(np.load('class_indices.npy').item())
@@ -87,7 +87,7 @@ def train_modelo():
 
     # Se "congelan" las 15 primeras capas para que no sean entrenadas:
     # 18 capas tiene vgg16 sin las FC del tope, por lo que habrá que quitar las 3 ultimas que son conv para hacer fine-tuning (18 - 3 = 15)
-    for layer in model.layers[:15]:
+    for layer in model.layers[:18]:
         layer.trainable = False
 
     # Se compila
@@ -136,6 +136,9 @@ def train_modelo():
     Resultado con DataAug previo[0.11911813156126431, 0.95822784810126582]
     '''
 
+    '''18 capas congelas (Transfer Learning):
+    Resultado [0.0055666465254670203, 1.0]
+    '''
 #***************************************
 # Función-prueba para predecir imagenes
 #***************************************
@@ -189,5 +192,5 @@ def predict_modelo():
 #***************************************
 # Funciones a ejecutar
 #***************************************
-#train_modelo()
+train_modelo()
 predict_modelo()
