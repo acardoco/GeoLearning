@@ -3,7 +3,7 @@ from __future__ import (
     division,
     print_function,
 )
-import skimage.data
+
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from keras.preprocessing.image import img_to_array, load_img 
