@@ -7,20 +7,23 @@ from PIL import Image
 import numpy as np
 import time
 
-
 import cv2
 
 #general parametters
 ciudadespath = 'pruebas/ciudades/ciudad6.jpg'
 size = 48, 48
-prob_minima = 0.9
+rango = 50
+
+# probabilidades minimas de cada clase para ser mostrada
+prob_minima_piscina = 0.4
+prob_minima_rotonda = 0.9
 
 #Si las otras clases con menor probabilidad superan estos valores, no se considerará un output valido
-prob_comp_piscina = 0.0001
+prob_comp_piscina = 0.01
 prob_comp_rotonda = 0.0000001
 
 # Regiones a comprobar (los outputs suelen ser muy grandes)
-numShowRects = 1500
+numShowRects = 5000
 
 # load the class_indices saved in the earlier step
 class_dictionary = np.load('class_indices.npy').item()
@@ -38,10 +41,10 @@ model_fine = load_model('fine_tuning.h5')
 def is_similar(x, y, h ,w, candidates):
 
     lo_es = False
-    rango = 30
 
     for item in candidates:
-        if (abs(x-item[0]) < rango and abs(y-item[1]) < rango and abs(h-item[2]) < rango and abs(w-item[3]) < rango):
+        xi, yi, hi, wi = item[1]
+        if (abs(x-xi) < rango and abs(y-yi) < rango and abs(h-hi) < rango and abs(w-wi) < rango):
             lo_es = True
             break
     return lo_es
@@ -52,17 +55,14 @@ def is_Valid(prob, label):
     valido = False
 
     valores = 0
-
-    if max(prob) > prob_minima:
-
-        # Para cada clase comprueba si las probabilidades de las otras clases son lo suficientemente pequeñas
-        for ele in prob:
-            if label == 'piscina':
-                if ele < prob_comp_piscina:
-                    valores += 1
-            if label == 'rotonda':
-                if ele < prob_comp_rotonda:
-                    valores += 1
+    # Para cada clase comprueba si las probabilidades de las otras clases son lo suficientemente pequeñas
+    for ele in prob:
+        if label == 'piscina' and max(prob)>prob_minima_piscina:
+            if ele < prob_comp_piscina:
+                valores += 1
+        if label == 'rotonda' and max(prob)>prob_minima_rotonda:
+            if ele < prob_comp_rotonda:
+                valores += 1
 
     if valores == 2:
         valido = True
@@ -158,9 +158,7 @@ def selec_cv2():
         if (i < numShowRects):
             x, y, w, h = rect
 
-            if ((x, y, w, h) in candidates):
-                continue
-
+            # si hay coordenadas de un box similares a otro que ya exista, se elimina
             if is_similar(x, y, w, h, candidates) == True:
                 continue
             # calling the clasiffier
@@ -168,7 +166,7 @@ def selec_cv2():
 
             # si cumple con el mínimo de prob, se añade a candidatos
             if is_Valid(prob, label):
-                candidates.add((x, y, w, h))
+                candidates.add((label,(x, y, w, h)))
             j += 1
             if (j % 100 == 0):
                 print("Regiones revisadas: ", j)
@@ -176,24 +174,28 @@ def selec_cv2():
             break
     end = time.time()
 
-    for item in sorted(candidates):
+    for item in candidates:
         print(item)
 
     print("tiempo procesamiento selective search: ", end_s - start_s)
     print("tiempo procesamiento: ", end - start)
 
-    print('Regiones propuestas: '.format(len(rects)))
+    print('Regiones propuestas: ', len(rects))
     print("Regiones válidas: ", j)
     print("Regiones clasificadas: ", candidates.__len__())
 
     # draw rectangles on the original image
     fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(6, 6))
     ax.imshow(im)
-    for x, y, w, h in candidates:
+    for item in candidates:
         # print(x, y, w, h)
+        x, y, w, h = item[1]
         rect = mpatches.Rectangle(
             (x, y), w, h, fill=False, edgecolor='red', linewidth=1)
         ax.add_patch(rect)
+        #añadir anotación al box
+        ax.annotate(item[0], (x + w /2, y + h/2), color='w', weight='bold',
+                    fontsize=6, ha='center', va='center')
 
     plt.show()
 

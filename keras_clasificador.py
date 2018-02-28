@@ -10,7 +10,10 @@ from keras.layers import Conv2D, MaxPooling2D
 from keras.layers import Activation, Dropout, Flatten, Dense
 from keras import backend as K
 
-import numpy as np 
+import numpy as np
+
+from tensorflow.python.client import device_lib
+print(device_lib.list_local_devices())
 
 #***************************************
 # Dimensiones generales de las imagenes
