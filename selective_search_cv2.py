@@ -30,6 +30,48 @@ model_fine = load_model('fine_tuning.h5')
 
 #----------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------
+# ******************************Funciones AUXILIARES*************************************
+#----------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------
+
+# Comprueba si hay boxes con coordenadas muy parecidas
+def is_similar(x, y, h ,w, candidates):
+
+    lo_es = False
+    rango = 30
+
+    for item in candidates:
+        if (abs(x-item[0]) < rango and abs(y-item[1]) < rango and abs(h-item[2]) < rango and abs(w-item[3]) < rango):
+            lo_es = True
+            break
+    return lo_es
+
+# Comprueba si las probabilidades dadas se ajustan a los mínimos requeridos
+def is_Valid(prob, label):
+
+    valido = False
+
+    valores = 0
+
+    if max(prob) > prob_minima:
+
+        # Para cada clase comprueba si las probabilidades de las otras clases son lo suficientemente pequeñas
+        for ele in prob:
+            if label == 'piscina':
+                if ele < prob_comp_piscina:
+                    valores += 1
+            if label == 'rotonda':
+                if ele < prob_comp_rotonda:
+                    valores += 1
+
+    if valores == 2:
+        valido = True
+    if label == 'parking':
+        valido = False
+
+    return valido
+#----------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------
 #Función que emplea la técnica de Fine Tuning
 #----------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------
@@ -63,33 +105,6 @@ def predictMultiple_fine(image_sat, x, y, w, h):
         print("Label", label, "probabilities", probabilities[0],"-coordenadas: ",crop_rectangle)
 
     return label, probabilities[0]
-
-def is_Valid(prob, label):
-
-    valido = False
-
-    valores = 0
-
-    if max(prob) > prob_minima:
-
-        # Para cada clase comprueba si las probabilidades de las otras clases son lo suficientemente pequeñas
-        for ele in prob:
-            if label == 'piscina':
-                if ele < prob_comp_piscina:
-                    valores += 1
-            if label == 'rotonda':
-                if ele < prob_comp_rotonda:
-                    valores += 1
-
-    if valores == 2:
-        valido = True
-    if label == 'parking':
-        valido = False
-
-    return valido
-
-
-
 
 def selec_cv2():
     
@@ -130,7 +145,6 @@ def selec_cv2():
 
     # run selective search segmentation on input image
     rects = ss.process()
-    print('Total Number of Region Proposals: {}'.format(len(rects)))
 
     candidates = set()
 
@@ -146,6 +160,9 @@ def selec_cv2():
 
             if ((x, y, w, h) in candidates):
                 continue
+
+            if is_similar(x, y, w, h, candidates) == True:
+                continue
             # calling the clasiffier
             label, prob = predictMultiple_fine(im_clasiffier, x, y, w, h)
 
@@ -159,12 +176,15 @@ def selec_cv2():
             break
     end = time.time()
 
+    for item in sorted(candidates):
+        print(item)
 
     print("tiempo procesamiento selective search: ", end_s - start_s)
     print("tiempo procesamiento: ", end - start)
 
-    print("Regiones seleccionadas:", j)
-    print("Regiones clasificadas:", candidates.__len__())
+    print('Regiones propuestas: '.format(len(rects)))
+    print("Regiones válidas: ", j)
+    print("Regiones clasificadas: ", candidates.__len__())
 
     # draw rectangles on the original image
     fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(6, 6))
