@@ -9,17 +9,19 @@ import time
 
 import cv2
 
+'''https://maps.googleapis.com/maps/api/staticmap?center=40.3328353,-3.7785943
+&zoom=18&format=jpg&size=400x400&maptype=satellite&key=AIzaSyDzqBTBX6dQUG98RLaspplZ-WKam3h87Pg'''
 #general parametters
-ciudadespath = 'pruebas/ciudades/ciudad6.jpg'
+ciudadespath = 'pruebas/ciudades/ciudad7.jpg'
 size = 48, 48
 rango = 50
 
 # probabilidades minimas de cada clase para ser mostrada
-prob_minima_piscina = 0.4
+prob_minima_piscina = 0.5
 prob_minima_rotonda = 0.9
 
 #Si las otras clases con menor probabilidad superan estos valores, no se considerará un output valido
-prob_comp_piscina = 0.01
+prob_comp_piscina = 0.0000001
 prob_comp_rotonda = 0.0000001
 
 # Regiones a comprobar (los outputs suelen ser muy grandes)
@@ -29,7 +31,7 @@ numShowRects = 5000
 class_dictionary = np.load('class_indices.npy').item()
 
 # fine tuning model
-model_fine = load_model('fine_tuning.h5')
+model_fine = load_model('fine_tuning_18_48x48.h5')
 
 #----------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------
@@ -44,6 +46,12 @@ def is_similar(x, y, h ,w, candidates):
 
     for item in candidates:
         xi, yi, hi, wi = item[1]
+        '''coord_x = x + h/2
+        coord_y = y + w/2
+        item_x = xi + hi/2
+        item_y = yi + wi/2'''
+
+        #if (abs(coord_x-item_x)<rango and abs(coord_y-item_y <rango)):
         if (abs(x-xi) < rango and abs(y-yi) < rango and abs(h-hi) < rango and abs(w-wi) < rango):
             lo_es = True
             break
@@ -56,10 +64,14 @@ def is_Valid(prob, label):
 
     valores = 0
     # Para cada clase comprueba si las probabilidades de las otras clases son lo suficientemente pequeñas
+    # parking - piscina - rotonda
+
+    if label == 'piscina' and max(prob)>prob_minima_piscina:
+        if prob[2] < prob_comp_piscina: # prob de la rotonda es menor
+            valores += 2
+
+
     for ele in prob:
-        if label == 'piscina' and max(prob)>prob_minima_piscina:
-            if ele < prob_comp_piscina:
-                valores += 1
         if label == 'rotonda' and max(prob)>prob_minima_rotonda:
             if ele < prob_comp_rotonda:
                 valores += 1
@@ -117,7 +129,7 @@ def selec_cv2():
     cv2.setNumThreads(4);
 
     # read image
-    im = cv2.imread('pruebas/ciudades/ciudad6.jpg')
+    im = cv2.imread(ciudadespath)
     b, g, r = cv2.split(im)
     im = cv2.merge([r,g,b])
 
@@ -173,9 +185,6 @@ def selec_cv2():
         else:
             break
     end = time.time()
-
-    for item in candidates:
-        print(item)
 
     print("tiempo procesamiento selective search: ", end_s - start_s)
     print("tiempo procesamiento: ", end - start)

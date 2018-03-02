@@ -6,7 +6,7 @@
 #***************************************
 '''
 
-from keras import applications
+from keras import applications, optimizers
 from keras.preprocessing.image import ImageDataGenerator, load_img, img_to_array
 from keras.models import Sequential, Model, load_model
 from keras.layers import Dropout, Flatten, Dense
@@ -87,12 +87,12 @@ def train_modelo():
 
     # Se "congelan" las 15 primeras capas para que no sean entrenadas:
     # 18 capas tiene vgg16 sin las FC del tope, por lo que habrá que quitar las 3 ultimas que son conv para hacer fine-tuning (18 - 3 = 15)
-    for layer in model.layers[:18]:
+    for layer in model.layers[:15]:
         layer.trainable = False
 
     # Se compila
     model.compile(loss='categorical_crossentropy',
-                  optimizer='adam',
+                  optimizer=optimizers.SGD(lr=1e-4, momentum=0.9),
                   metrics=['accuracy'])
 
     # Se "inyectan" los datasets
@@ -128,9 +128,7 @@ def train_modelo():
 
     print('Resultado', eval)
 
-    print_train_sumary(history)
-
-    model.save('fine_tuning.h5')
+    model.save('fine_tuning_15_48x48.h5')
     '''
     Resultado sin DataAug previo [0.12555930473659541, 0.94444444368945224]
     Resultado con DataAug previo[0.11911813156126431, 0.95822784810126582]
@@ -138,18 +136,21 @@ def train_modelo():
 
     '''18 capas congelas (Transfer Learning):
     Resultado [0.0055666465254670203, 1.0]
+    
+    15 capas congelas con rango de aprendizaje muy bajo y SGD (Fine Tunning):
+    Resultado [0.11849022399826352, 0.97531645569620251]
     '''
 #***************************************
 # Función-prueba para predecir imagenes
 #***************************************
 def predict_modelo():
 
-    model = load_model('fine_tuning.h5')
+    model = load_model('fine_tuning_15_48x48.h5')
 
     # Se cargan las clases
     class_dictionary = np.load('class_indices.npy').item()
 
-    image_path = 'pruebas\\imag\\piscina.jpg'
+    image_path = 'pruebas\\imag\\piscina2.jpg'
     orig = cv2.imread(image_path)
     print("[INFO] loading and preprocessing image...")
     image = load_img(image_path, target_size=(48, 48))
@@ -181,10 +182,8 @@ def predict_modelo():
     # get the prediction label
     print("Image ID: {}, Label: {}".format(inID, label))
 
-    model_vgg = applications.VGG16(weights='imagenet', include_top=False, input_shape=(img_width, img_height, 3))
-
-    for i,layer in enumerate(model_vgg.layers):
-        print(i, layer.name, layer.output_shape)
+    for i,layer in enumerate(model.layers):
+        print(i, layer.name, layer.output_shape,layer.trainable)
 
  #***********************************
  #***********************************
@@ -192,5 +191,5 @@ def predict_modelo():
 #***************************************
 # Funciones a ejecutar
 #***************************************
-train_modelo()
+#train_modelo()
 predict_modelo()

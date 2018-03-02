@@ -51,8 +51,8 @@ img_width, img_height = 48, 48
 
 top_model_weights_path = 'bottleneck_fc_model.h5' 
 
-train_data_dir = 'data\\train'
-validation_data_dir = 'data\\validate'
+train_data_dir = 'data\\data_augmentation_output\\train'
+validation_data_dir = 'data\\data_augmentation_output\\validate'
 
 epochs = 50
 batch_size = 16
@@ -196,7 +196,7 @@ def predict():
     num_classes = len(class_dictionary)
 
     # add the path to your test image below
-    image_path = 'pruebas\\imag\\test_no_piscina.jpg'
+    image_path = 'pruebas\\imag\\piscina.jpg'
 
     orig = cv2.imread(image_path)
 
@@ -253,9 +253,9 @@ def predict():
     print('Probabilidad mayor', probabilities[0][inID])
 
 
-save_bottlebeck_features()
-train_top_model()
-#predict()
+#save_bottlebeck_features()
+#train_top_model()
+predict()
 
 cv2.destroyAllWindows()
 
