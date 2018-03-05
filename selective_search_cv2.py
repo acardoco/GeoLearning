@@ -12,13 +12,13 @@ import cv2
 '''https://maps.googleapis.com/maps/api/staticmap?center=40.3328353,-3.7785943
 &zoom=18&format=jpg&size=400x400&maptype=satellite&key=AIzaSyDzqBTBX6dQUG98RLaspplZ-WKam3h87Pg'''
 #general parametters
-ciudadespath = 'pruebas/ciudades/ciudad7.jpg'
+ciudadespath = 'pruebas/ciudades/ciudad6.jpg'
 size = 48, 48
 rango = 50
 
 # probabilidades minimas de cada clase para ser mostrada
 prob_minima_piscina = 0.5
-prob_minima_rotonda = 0.9
+prob_minima_rotonda = 0.97
 
 #Si las otras clases con menor probabilidad superan estos valores, no se considerará un output valido
 prob_comp_piscina = 0.0000001

@@ -92,7 +92,7 @@ def train_modelo():
 
     # Se compila
     model.compile(loss='categorical_crossentropy',
-                  optimizer=optimizers.SGD(lr=1e-4, momentum=0.9),
+                  optimizer=optimizers.SGD(lr=1e-6, momentum=0.9),
                   metrics=['accuracy'])
 
     # Se "inyectan" los datasets
@@ -116,6 +116,7 @@ def train_modelo():
         batch_size=batch_size,
         class_mode='categorical')
 
+
     # Se entrena el modelo con Fine-Tuning
     history = model.fit_generator(
         train_generator,
@@ -129,6 +130,8 @@ def train_modelo():
     print('Resultado', eval)
 
     model.save('fine_tuning_15_48x48.h5')
+
+    print_train_sumary(history)
     '''
     Resultado sin DataAug previo [0.12555930473659541, 0.94444444368945224]
     Resultado con DataAug previo[0.11911813156126431, 0.95822784810126582]
@@ -137,8 +140,14 @@ def train_modelo():
     '''18 capas congelas (Transfer Learning):
     Resultado [0.0055666465254670203, 1.0]
     
-    15 capas congelas con rango de aprendizaje muy bajo y SGD (Fine Tunning):
+    15 capas congelas con rango de aprendizaje muy bajo y SGD e-4 (Fine Tunning):
     Resultado [0.11849022399826352, 0.97531645569620251]
+    
+    15 capas congelas con rango de aprendizaje muy bajo y SGD e-5 (Fine Tunning):
+    Resultado [0.030713025634991935, 0.99198312236286923]
+    
+    15 capas congelas con rango de aprendizaje muy bajo y SGD e-6 (Fine Tunning):
+    Resultado [0.090149949951365618, 0.98829113924050638]
     '''
 #***************************************
 # Función-prueba para predecir imagenes
@@ -150,7 +159,7 @@ def predict_modelo():
     # Se cargan las clases
     class_dictionary = np.load('class_indices.npy').item()
 
-    image_path = 'pruebas\\imag\\piscina2.jpg'
+    image_path = 'pruebas\\imag\\piscina.jpg'
     orig = cv2.imread(image_path)
     print("[INFO] loading and preprocessing image...")
     image = load_img(image_path, target_size=(48, 48))
@@ -182,8 +191,8 @@ def predict_modelo():
     # get the prediction label
     print("Image ID: {}, Label: {}".format(inID, label))
 
-    for i,layer in enumerate(model.layers):
-        print(i, layer.name, layer.output_shape,layer.trainable)
+    '''for i,layer in enumerate(model.layers):
+        print(i, layer.name, layer.output_shape,layer.trainable)'''
 
  #***********************************
  #***********************************
@@ -191,5 +200,5 @@ def predict_modelo():
 #***************************************
 # Funciones a ejecutar
 #***************************************
-#train_modelo()
+train_modelo()
 predict_modelo()
