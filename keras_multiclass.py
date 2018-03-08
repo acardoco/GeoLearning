@@ -49,7 +49,9 @@ import cv2
 # dimensions of our images.
 img_width, img_height = 48, 48
 
-top_model_weights_path = 'bottleneck_fc_model.h5' 
+top_model_weights_path = 'bottleneck_fc_model.h5'
+features_train_dir = 'bottleneck_features_train'
+features_validation_dir = 'bottleneck_features_validation'
 
 train_data_dir = 'data\\data_augmentation_output\\train'
 validation_data_dir = 'data\\data_augmentation_output\\validate'
@@ -82,7 +84,7 @@ def save_bottlebeck_features():
     bottleneck_features_train = model.predict_generator(
         generator, predict_size_train)
 
-    np.save('bottleneck_features_train', bottleneck_features_train)
+    np.save(features_train_dir, bottleneck_features_train)
 
     generator = datagen.flow_from_directory(
         validation_data_dir,
@@ -99,7 +101,7 @@ def save_bottlebeck_features():
     bottleneck_features_validation = model.predict_generator(
         generator, predict_size_validation)
 
-    np.save('bottleneck_features_validation',
+    np.save(features_validation_dir,
             bottleneck_features_validation)
 
 
@@ -119,7 +121,7 @@ def train_top_model():
     np.save('class_indices.npy', generator_top.class_indices)
 
     # load the bottleneck features saved earlier
-    train_data = np.load('bottleneck_features_train.npy')
+    train_data = np.load(features_train_dir + '.npy')
 
     # get the class lebels for the training data, in the original order
     train_labels = generator_top.classes
@@ -137,7 +139,7 @@ def train_top_model():
 
     nb_validation_samples = len(generator_top.filenames)
 
-    validation_data = np.load('bottleneck_features_validation.npy')
+    validation_data = np.load(features_validation_dir + '.npy')
 
     validation_labels = generator_top.classes
     validation_labels = to_categorical(
@@ -158,7 +160,6 @@ def train_top_model():
                         validation_data=(validation_data, validation_labels))
 
     model.save_weights(top_model_weights_path)
-    model.save('multiclass.h5')
 
     (eval_loss, eval_accuracy) = model.evaluate(
         validation_data, validation_labels, batch_size=batch_size, verbose=1)
@@ -201,7 +202,7 @@ def predict():
     orig = cv2.imread(image_path)
 
     print("[INFO] loading and preprocessing image...")
-    image = load_img(image_path, target_size=(40, 40))
+    image = load_img(image_path, target_size=(img_width, img_height))
     image = img_to_array(image)
 
     # important! otherwise the predictions will be '0'
@@ -253,8 +254,8 @@ def predict():
     print('Probabilidad mayor', probabilities[0][inID])
 
 
-#save_bottlebeck_features()
-#train_top_model()
+save_bottlebeck_features()
+train_top_model()
 predict()
 
 cv2.destroyAllWindows()
@@ -262,4 +263,20 @@ cv2.destroyAllWindows()
 '''
 16/90 [====>.........................] - ETA: 0s[INFO] accuracy: 94.44%
 [INFO] Loss: 0.1255592983885486
+
+Para 68x68 con dataset_v2:
+[INFO] accuracy: 98.89%
+[INFO] Loss: 0.07318867354660623
+
+Para 40x40 con dataset_v2:
+[INFO] accuracy: 98.22%
+[INFO] Loss: 0.13329049465110787
+
+Para 48x48 con dataset_v2:
+[INFO] accuracy: 99.11%
+[INFO] Loss: 0.05190005082830491
+
+Para 48x48 con dataset original modificadas imagens de parking:
+[INFO] accuracy: 96.67%
+[INFO] Loss: 0.16513207533776722
 '''

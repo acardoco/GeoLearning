@@ -18,12 +18,12 @@ import cv2
 #***************************************
 # Parámetros generales
 #***************************************
-weights_path = '../keras/examples/vgg16_weights.h5'
 top_model_weights_path = 'bottleneck_fc_model.h5'
 img_width, img_height = 48, 48
 
 train_data_dir = 'data\\data_augmentation_output\\train'
 validation_data_dir = 'data\\data_augmentation_output\\validate'
+modelo_save_dir = 'fine_tuning_18_48x48_parking.h5'
 nb_train_samples = 2000
 nb_validation_samples = 600
 epochs = 50
@@ -87,12 +87,12 @@ def train_modelo():
 
     # Se "congelan" las 15 primeras capas para que no sean entrenadas:
     # 18 capas tiene vgg16 sin las FC del tope, por lo que habrá que quitar las 3 ultimas que son conv para hacer fine-tuning (18 - 3 = 15)
-    for layer in model.layers[:15]:
+    for layer in model.layers[:18]:
         layer.trainable = False
 
     # Se compila
     model.compile(loss='categorical_crossentropy',
-                  optimizer=optimizers.SGD(lr=1e-6, momentum=0.9),
+                  optimizer=optimizers.SGD(lr=1e-5, momentum=0.9),
                   metrics=['accuracy'])
 
     # Se "inyectan" los datasets
@@ -129,7 +129,7 @@ def train_modelo():
 
     print('Resultado', eval)
 
-    model.save('fine_tuning_15_48x48.h5')
+    model.save(modelo_save_dir)
 
     print_train_sumary(history)
     '''
@@ -148,13 +148,29 @@ def train_modelo():
     
     15 capas congelas con rango de aprendizaje muy bajo y SGD e-6 (Fine Tunning):
     Resultado [0.090149949951365618, 0.98829113924050638]
+    
+    **DATASET V2:
+    
+    15 capas congelas con rango de aprendizaje muy bajo y SGD e-6 (Fine Tunning) Y dataset_v2 con 68x68:
+    Resultado [0.077296504126468796, 0.99103375527426163]
+    
+    15 capas congelas con rango de aprendizaje muy bajo y SGD e-5 (Fine Tunning) Y dataset_v2 con 48x48:
+    Resultado [0.052187373268115178, 0.99029535864978901]
+    
+    18 CAPAS congelas con rango de aprendizaje muy bajo y SGD e-4 (Fine Tunning) Y dataset_v2 con 48x48:
+    Resultado [0.036398688509460361, 0.99008438818565403]
+    
+    FIN DATASET V2
+    
+    18 CAPAS congelas con rango de aprendizaje muy bajo y SGD e-5 (Fine Tunning) y dataset original con parking modificado (fine_tuning_18_48x48_parking.h5):
+    Resultado [0.1500440054625479, 0.97341772151898731]
     '''
 #***************************************
 # Función-prueba para predecir imagenes
 #***************************************
 def predict_modelo():
 
-    model = load_model('fine_tuning_15_48x48.h5')
+    model = load_model(modelo_save_dir)
 
     # Se cargan las clases
     class_dictionary = np.load('class_indices.npy').item()
@@ -162,7 +178,7 @@ def predict_modelo():
     image_path = 'pruebas\\imag\\piscina.jpg'
     orig = cv2.imread(image_path)
     print("[INFO] loading and preprocessing image...")
-    image = load_img(image_path, target_size=(48, 48))
+    image = load_img(image_path, target_size=(img_width, img_height))
     image = img_to_array(image)
 
     image = image / 255

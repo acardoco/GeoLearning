@@ -13,21 +13,18 @@ from keras import backend as K
 
 import numpy as np
 
-from tensorflow.python.client import device_lib
-print(device_lib.list_local_devices())
-
 #***************************************
 # Dimensiones generales de las imagenes
 #***************************************
-img_width, img_height = 48, 48
+img_width, img_height = 48,48
 
 #***************************************
 # Parámetros generales
 #***************************************
-train_data_dir = 'data\\data_augmentation_output\\train'
-validation_data_dir = 'data\\data_augmentation_output\\validate'
-nb_train_samples = 4000
-nb_validation_samples = 900
+train_data_dir = 'data_v2\\data_augmentation_output_v2_3000_800\\train'
+validation_data_dir = 'data_v2\\data_augmentation_output_v2_3000_800\\validate'
+nb_train_samples = 3000
+nb_validation_samples = 800
 epochs = 50
 batch_size = 32
 num_classes = len(np.load('class_indices.npy').item())
@@ -96,7 +93,7 @@ model.add(Activation('relu'))
 model.add(MaxPooling2D(pool_size=pooling_size))
 
 model.add(Flatten())
-model.add(Dense(1028, activation='relu'))
+model.add(Dense(256, activation='relu'))
 model.add(Dropout(0.5))
 model.add(Dense(num_classes,  activation='sigmoid'))
 
@@ -104,7 +101,7 @@ model.add(Dense(num_classes,  activation='sigmoid'))
 # Se indica la función de error, optimizador y métrica a mostrar
 # "categorical" es para indicar que va a haber más de dos clases
 #***************************************
-model.compile(loss='categorical_crossentropy',
+model.compile(loss='mean_squared_logarithmic_error',
               optimizer='adam',
               metrics=['accuracy'])
 
@@ -171,7 +168,16 @@ print_train_sumary(history)
 [0.32504198165131015, 0.87679324894514765] -- nuevas cosas añadidas al ImageDataGenerator && [kernel = (2,2) || nuevas capas con 128]
 [0.19394528099850511, 0.93164556962025313] -- nuevas cosas añadidas al ImageDataGenerator_v2
 [0.062006123949340776, 0.97509497733697859] -- nuevas cosas añadidas al ImageDataGenerator_v3
-[0.069960000949393461, 0.97231759656652361] -- Dataset_V2
+[0.069960000949393461, 0.97231759656652361] -- Dataset_Augmented 4000-900
+[0.20118663615366064, 0.95112660944206007] -- dataset_aug_v2
+[0.21565412196183703, 0.97006437768240339] -- dataset_aug_v2 56x56 90epochs
+[0.1882300089876697, 0.96770386266094421] -- dataset_aug_v2 68x68
+[0.16709360712583873, 0.96111583460941019] --dataset_aug_v2 56x56 40batch
+[0.18661447051514896, 0.95330308237474348] --dataset_aug_v2_2000_600 30x30 32batch
+[0.049814810118578613, 0.98675601552336867] --dataset original con algunas modificaciones en las imagenes del parking (48x48)
+
+ERROR CAMBIADO A mean_squared_logarithmic_error
+[0.0098129704478977457, 0.96625000000000005] -- dataset_aug_v2_3000_800 con distorsiones en imagenes
 '''
 #***************************************
 model.save('my_model_v4_48x48.h5')

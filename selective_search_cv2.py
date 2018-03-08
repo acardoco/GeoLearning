@@ -12,20 +12,23 @@ import cv2
 '''https://maps.googleapis.com/maps/api/staticmap?center=40.3328353,-3.7785943
 &zoom=18&format=jpg&size=400x400&maptype=satellite&key=AIzaSyDzqBTBX6dQUG98RLaspplZ-WKam3h87Pg'''
 #general parametters
-ciudadespath = 'pruebas/ciudades/ciudad6.jpg'
+#imagenes 400x400 en jpg
+ciudadespath = 'pruebas/ciudades/ciudad7.jpg'
 size = 48, 48
-rango = 50
+rango = 25
 
 # probabilidades minimas de cada clase para ser mostrada
-prob_minima_piscina = 0.5
-prob_minima_rotonda = 0.97
+prob_minima_piscina = 0.8
+prob_minima_rotonda = 0.98
+prob_minima_parking = 0.995
 
 #Si las otras clases con menor probabilidad superan estos valores, no se considerará un output valido
-prob_comp_piscina = 0.0000001
-prob_comp_rotonda = 0.0000001
+prob_comp_piscina = 0.000001
+prob_comp_rotonda = 0.000001
+prob_comp_parking = 0.0000001
 
 # Regiones a comprobar (los outputs suelen ser muy grandes)
-numShowRects = 5000
+numShowRects = 6000
 
 # load the class_indices saved in the earlier step
 class_dictionary = np.load('class_indices.npy').item()
@@ -46,10 +49,6 @@ def is_similar(x, y, h ,w, candidates):
 
     for item in candidates:
         xi, yi, hi, wi = item[1]
-        '''coord_x = x + h/2
-        coord_y = y + w/2
-        item_x = xi + hi/2
-        item_y = yi + wi/2'''
 
         #if (abs(coord_x-item_x)<rango and abs(coord_y-item_y <rango)):
         if (abs(x-xi) < rango and abs(y-yi) < rango and abs(h-hi) < rango and abs(w-wi) < rango):
@@ -75,6 +74,9 @@ def is_Valid(prob, label):
         if label == 'rotonda' and max(prob)>prob_minima_rotonda:
             if ele < prob_comp_rotonda:
                 valores += 1
+        if label == 'parking' and max(prob)>prob_minima_parking:
+            if ele < prob_comp_parking:
+                valores += 1
 
     if valores == 2:
         valido = True
@@ -91,7 +93,7 @@ def predictMultiple_fine(image_sat, x, y, w, h):
 
     crop_rectangle = (x, y, w + x , h + y)
     image = image_sat.crop(crop_rectangle)
-    image = image.resize(size)
+    image = image.resize(size, Image.ADAPTIVE)
     image = img_to_array(image)
 
     # important! otherwise the predictions will be '0'
@@ -119,11 +121,11 @@ def predictMultiple_fine(image_sat, x, y, w, h):
     return label, probabilities[0]
 
 def selec_cv2():
-    
+
     # imagen que emplearán los clasificadores
     im_clasiffier = Image.open(ciudadespath)
-    
-    
+
+
     # speed-up using multithreads
     cv2.setUseOptimized(True);
     cv2.setNumThreads(4);
@@ -140,9 +142,7 @@ def selec_cv2():
     im = cv2.resize(im, (newWidth, newHeight))'''
 
     # create Selective Search Segmentation Object using default parameters
-    start_s = time.time()
     ss = cv2.ximgproc.segmentation.createSelectiveSearchSegmentation()
-    end_s = time.time()
 
     # set input image on which we will run segmentation
     ss.setBaseImage(im)
@@ -156,7 +156,9 @@ def selec_cv2():
     ss.switchToSelectiveSearchQuality()
 
     # run selective search segmentation on input image
+    start_s = time.time()
     rects = ss.process()
+    end_s = time.time()
 
     candidates = set()
 
