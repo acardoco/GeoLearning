@@ -13,12 +13,12 @@ import cv2
 &zoom=18&format=jpg&size=400x400&maptype=satellite&key=AIzaSyDzqBTBX6dQUG98RLaspplZ-WKam3h87Pg'''
 #general parametters
 #imagenes 400x400 en jpg
-ciudadespath = 'pruebas/ciudades/ciudad7.jpg'
+ciudadespath = 'pruebas/ciudades/ciudad6.jpg'
 size = 48, 48
 rango = 25
 
 # probabilidades minimas de cada clase para ser mostrada
-prob_minima_piscina = 0.8
+prob_minima_piscina = 0.5 #0.8
 prob_minima_rotonda = 0.98
 prob_minima_parking = 0.995
 
