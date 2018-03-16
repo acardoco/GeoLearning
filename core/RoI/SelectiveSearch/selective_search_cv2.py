@@ -3,6 +3,8 @@ import matplotlib.patches as mpatches
 from keras.preprocessing.image import img_to_array, load_img
 from keras.models import Sequential, load_model
 
+import os
+
 from PIL import Image
 import numpy as np
 import time
@@ -13,13 +15,14 @@ import cv2
 &zoom=18&format=jpg&size=400x400&maptype=satellite&key=AIzaSyDzqBTBX6dQUG98RLaspplZ-WKam3h87Pg'''
 #general parametters
 #imagenes 400x400 en jpg
-ciudadespath = 'pruebas/ciudades/ciudad6.jpg'
+# hay un bug que consiste en que si le paso la imagen desde otra carpeta que no esté dentro de este fichero no detecta el rgb con .split
+ciudadespath = 'ciudades\ciudad7.jpg'
 size = 48, 48
 rango = 25
 
 # probabilidades minimas de cada clase para ser mostrada
 prob_minima_piscina = 0.5 #0.8
-prob_minima_rotonda = 0.98
+prob_minima_rotonda = 0.9
 prob_minima_parking = 0.995
 
 #Si las otras clases con menor probabilidad superan estos valores, no se considerará un output valido
@@ -31,10 +34,10 @@ prob_comp_parking = 0.0000001
 numShowRects = 6000
 
 # load the class_indices saved in the earlier step
-class_dictionary = np.load('class_indices.npy').item()
+class_dictionary = np.load('C:\\Users\Andrés\Documents\\UC3M\TFM\GeoLearning\core\outputs_de_modelos\class_indices.npy').item()
 
 # fine tuning model
-model_fine = load_model('fine_tuning_18_48x48.h5')
+model_fine = load_model('C:\\Users\Andrés\Documents\\UC3M\TFM\GeoLearning\modelos\\fine_tuning_18_48x48.h5')
 
 #----------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------
