@@ -16,18 +16,18 @@ import numpy as np
 #***************************************
 # Dimensiones generales de las imagenes
 #***************************************
-img_width, img_height = 48,48
+img_width, img_height = 80, 80
 
 #***************************************
 # Parámetros generales
 #***************************************
-train_data_dir = 'data_v2\\data_augmentation_output_v2_3000_800\\train'
-validation_data_dir = 'data_v2\\data_augmentation_output_v2_3000_800\\validate'
-nb_train_samples = 3000
-nb_validation_samples = 800
+train_data_dir = 'C:\\Users\Andrés\Documents\\UC3M\TFM\GeoLearning\datos\data_v3\set_80x80\\train'
+validation_data_dir = 'C:\\Users\Andrés\Documents\\UC3M\TFM\GeoLearning\datos\data_v3\set_80x80\\validate'
+nb_train_samples = 991
+nb_validation_samples = 348
 epochs = 50
 batch_size = 32
-num_classes = len(np.load('class_indices.npy').item())
+num_classes = len(np.load('outputs_de_modelos/class_indices.npy').item())
 kernel_size = (3,3)
 pooling_size =(3,3)
 
@@ -101,7 +101,7 @@ model.add(Dense(num_classes,  activation='sigmoid'))
 # Se indica la función de error, optimizador y métrica a mostrar
 # "categorical" es para indicar que va a haber más de dos clases
 #***************************************
-model.compile(loss='mean_squared_logarithmic_error',
+model.compile(loss='categorical_crossentropy',
               optimizer='adam',
               metrics=['accuracy'])
 
@@ -110,6 +110,8 @@ model.compile(loss='mean_squared_logarithmic_error',
 #***************************************
 
 train_datagen = ImageDataGenerator(
+    rescale=1. / 255)
+'''train_datagen = ImageDataGenerator(
     rescale=1. / 255,
     rotation_range=180,
     width_shift_range=0.2,
@@ -117,7 +119,7 @@ train_datagen = ImageDataGenerator(
     shear_range=0.4,
     zoom_range=0.2,
     horizontal_flip=True,
-    fill_mode='nearest')
+    fill_mode='nearest')'''
 
 # Se reescala las imágenes para pasarlas de que valgan entre 0-255 (RGB) a que tomen valores entre 0-1
 test_datagen = ImageDataGenerator(rescale=1. / 255)
@@ -178,8 +180,14 @@ print_train_sumary(history)
 
 ERROR CAMBIADO A mean_squared_logarithmic_error
 [0.0098129704478977457, 0.96625000000000005] -- dataset_aug_v2_3000_800 con distorsiones en imagenes
+
+
+DATA_v3 con 80x80 sin Aug y categorical_cross_entropy
+['loss', 'acc']
+[0.11944854707336736, 0.9626527613996706]
+
 '''
 #***************************************
-model.save('my_model_v4_48x48.h5')
+model.save('C:\\Users\Andrés\Documents\\UC3M\TFM\GeoLearning\modelos\my_model_dv3_80x80.h5')
 
 
