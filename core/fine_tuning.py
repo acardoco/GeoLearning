@@ -19,16 +19,16 @@ import cv2
 # Parámetros generales
 #***************************************
 top_model_weights_path = 'bottleneck_fc_model.h5'
-img_width, img_height = 48, 48
+img_width, img_height = 80, 80 #48,48
 
-train_data_dir = 'data\\data_augmentation_output\\train'
-validation_data_dir = 'data\\data_augmentation_output\\validate'
-modelo_save_dir = 'fine_tuning_18_48x48_parking.h5'
-nb_train_samples = 2000
-nb_validation_samples = 600
-epochs = 50
+train_data_dir = 'C:\\Users\Andrés\Documents\\UC3M\TFM\GeoLearning\datos\data_v3\set_80x80_2\\train'
+validation_data_dir = 'C:\\Users\Andrés\Documents\\UC3M\TFM\GeoLearning\datos\data_v3\set_80x80_2\\validate'
+modelo_save_dir = 'fine_tuning_18_48x48_parking_dv3_2.h5'
+nb_train_samples = 1004 # 2000
+nb_validation_samples = 336 #600
+epochs = 80 # 50
 batch_size = 16
-num_classes = len(np.load('class_indices.npy').item())
+num_classes = 3
 
 #***************************************
 # Función para mostrar resultados de entrenamiento
@@ -80,7 +80,7 @@ def train_modelo():
     top_model.add(Dense(num_classes, activation='sigmoid'))
 
     # Para hacer Fine-Tuning hay que partir de un clasificador ya entrenado: en este caso se emplea el entrenado con Trasnfer-Learning y VGG16
-    top_model.load_weights(top_model_weights_path)
+    #top_model.load_weights(top_model_weights_path)
 
     # Se instancia una clase tipo "Model", añadiendo top_model encima de model_vgg
     model = Model(inputs=model_vgg.input, outputs=top_model(model_vgg.output))
@@ -164,6 +164,11 @@ def train_modelo():
     
     18 CAPAS congelas con rango de aprendizaje muy bajo y SGD e-5 (Fine Tunning) y dataset original con parking modificado (fine_tuning_18_48x48_parking.h5):
     Resultado [0.1500440054625479, 0.97341772151898731]
+    
+    DATASET V3:
+    
+    (*)[0.38967614588638144, 0.93447916666666664] 50 epochs, set_80x80_2 con Tranfer Learning (sin cargar pesos y 18 congeladas)
+    [0.31661114881436031, 0.94906250000000003] (*) con 80 epochs 
     '''
 #***************************************
 # Función-prueba para predecir imagenes
@@ -173,7 +178,7 @@ def predict_modelo():
     model = load_model(modelo_save_dir)
 
     # Se cargan las clases
-    class_dictionary = np.load('class_indices.npy').item()
+    class_dictionary = np.load('outputs_de_modelos\class_indices.npy').item()
 
     image_path = 'pruebas\\imag\\piscina.jpg'
     orig = cv2.imread(image_path)

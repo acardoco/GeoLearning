@@ -4,7 +4,6 @@
 #***************************************
 #***************************************
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential
 from keras.layers import Conv2D, MaxPooling2D
@@ -21,12 +20,12 @@ img_width, img_height = 80, 80
 #***************************************
 # Parámetros generales
 #***************************************
-train_data_dir = 'C:\\Users\Andrés\Documents\\UC3M\TFM\GeoLearning\datos\data_v3\set_80x80\\train'
-validation_data_dir = 'C:\\Users\Andrés\Documents\\UC3M\TFM\GeoLearning\datos\data_v3\set_80x80\\validate'
-nb_train_samples = 991
-nb_validation_samples = 348
-epochs = 50
-batch_size = 32
+train_data_dir = 'C:\\Users\Andrés\Documents\\UC3M\TFM\GeoLearning\datos\data_v3\set_80x80_2\\train'
+validation_data_dir = 'C:\\Users\Andrés\Documents\\UC3M\TFM\GeoLearning\datos\data_v3\set_80x80_2\\validate'
+nb_train_samples = 1686 #991
+nb_validation_samples = 478 #348
+epochs = 150 #50
+batch_size = 32 #32
 num_classes = len(np.load('outputs_de_modelos/class_indices.npy').item())
 kernel_size = (3,3)
 pooling_size =(3,3)
@@ -92,8 +91,36 @@ model.add(Conv2D(64, kernel_size))
 model.add(Activation('relu'))
 model.add(MaxPooling2D(pool_size=pooling_size))
 
+#hasta aquí capas iniciales
+
+model.add(Conv2D(128, kernel_size))
+model.add(Activation('relu'))
+model.add(Dropout(0.5))
+
+model.add(Conv2D(128, kernel_size))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=pooling_size))
+
+model.add(Conv2D(256, (1,1)))
+model.add(Activation('relu'))
+model.add(Dropout(0.5))
+
+model.add(Conv2D(256, (1,1)))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(1,1)))
+
+# hasta aquí "algunas capas"
+'''
+model.add(Conv2D(512, (1,1)))
+model.add(Activation('relu'))
+model.add(Dropout(0.5))
+
+model.add(Conv2D(512, (1,1)))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(1,1)))'''
+
 model.add(Flatten())
-model.add(Dense(256, activation='relu'))
+model.add(Dense(256, activation='relu')) #256
 model.add(Dropout(0.5))
 model.add(Dense(num_classes,  activation='sigmoid'))
 
@@ -109,9 +136,9 @@ model.compile(loss='categorical_crossentropy',
 # Como es un dataset de imágenes se emplea una clase especial de Keras que permite, entre otras cosas, DataAugmentation
 #***************************************
 
-train_datagen = ImageDataGenerator(
-    rescale=1. / 255)
 '''train_datagen = ImageDataGenerator(
+    rescale=1. / 255)'''
+train_datagen = ImageDataGenerator(
     rescale=1. / 255,
     rotation_range=180,
     width_shift_range=0.2,
@@ -119,7 +146,7 @@ train_datagen = ImageDataGenerator(
     shear_range=0.4,
     zoom_range=0.2,
     horizontal_flip=True,
-    fill_mode='nearest')'''
+    fill_mode='nearest')
 
 # Se reescala las imágenes para pasarlas de que valgan entre 0-255 (RGB) a que tomen valores entre 0-1
 test_datagen = ImageDataGenerator(rescale=1. / 255)
@@ -182,12 +209,27 @@ ERROR CAMBIADO A mean_squared_logarithmic_error
 [0.0098129704478977457, 0.96625000000000005] -- dataset_aug_v2_3000_800 con distorsiones en imagenes
 
 
-DATA_v3 con 80x80 sin Aug y categorical_cross_entropy
+DATA_v3 
 ['loss', 'acc']
-[0.11944854707336736, 0.9626527613996706]
-
+[0.11944854707336736, 0.9626527613996706] con 80x80 sin Aug y categorical_cross_entropy
+[0.3636461944851454, 0.90222222222222226] con 80x80 y Aug(3000_450) y categorical_cross_entropy
+[0.34997867314012615, 0.89837673324942524] con 80x80, 80 epochs y Aug(2300_325 compensado) y categorical_cross_entropy
+    DATA_v3 set_80x80_2
+    (+)[0.14274147466839379, 0.95478723508246399] con 80x80, 80 epochs sin Aug y categorical_cross_entropy
+    (*) [0.10390177214508282, 0.96542553315771384] igual pero con + PARAMETROS en ImageDataAugmentation
+    [0.19170924897444375, 0.93085106863620437] igual pero con más capas, 1024-FC 64 batch y 100 epochs
+    [0.3818404035682374, 0.86170212897848575] 80 epoch, 32 batch y + más capas y 1024-FC
+    [0.14657957505949951, 0.96010638437372575] (*) en "my_model_dv3_80x80_2"
+    [0.31570550615800186, 0.91755319280827297] (*) con más capas
+    [0.63741721928119655, 0.81648936281812956] (*) con más capas pero 128-256-512-1024FC 
+    [0.24499686194639037, 0.9196662303664922] (*) con más capas pero 128-256-512-256FC y fuera datos de dataset_v2
+    [0.17947033210129301, 0.94049956369982546] (*) y fuera datos de dataset_v2
+    [0.16494690282550209, 0.94039048865619546] (+) y fuera datos de dataset_v2
+    (-)[0.098912827930487224, 0.95397489781035538] con datos de DataAug-rotonda de datasetv2 y 80 epochs ... -> en selecSearch no pilla las rotondas
+    [0.98016709552524484, 0.8158995858171495] (-) con más capas
+    (-) algunas capas y 150 epochs
 '''
 #***************************************
-model.save('C:\\Users\Andrés\Documents\\UC3M\TFM\GeoLearning\modelos\my_model_dv3_80x80.h5')
+model.save('C:\\Users\Andrés\Documents\\UC3M\TFM\GeoLearning\modelos\my_model_dv3_80x80_2_prueba.h5')
 
 

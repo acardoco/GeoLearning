@@ -16,28 +16,28 @@ import cv2
 #general parametters
 #imagenes 400x400 en jpg
 # hay un bug que consiste en que si le paso la imagen desde otra carpeta que no esté dentro de este fichero no detecta el rgb con .split
-ciudadespath = 'ciudades\ciudad6.jpg'
+ciudadespath = 'ciudades\ciudad7.jpg'
 size = 80, 80
-rango = 50 #25
+rango = 25 #25
 
 # probabilidades minimas de cada clase para ser mostrada
-prob_minima_piscina = 0.995 #0.5 (1ero) - 0.8
-prob_minima_rotonda = 0.85  #0.9
-prob_minima_parking = 0.99 #.995
+prob_minima_piscina = 0.999 #0.5 (1ero) - 0.8
+prob_minima_rotonda = 0.98  #0.9
+prob_minima_parking = 0.999 #.995
 
 #Si las otras clases con menor probabilidad superan estos valores, no se considerará un output valido
-prob_comp_piscina = 0.0000001 #0.000001
-prob_comp_rotonda = 0.000001 #0.000001
-prob_comp_parking = 0.0000001
+prob_comp_piscina = 0.01 #0.000001
+prob_comp_rotonda = 0.005 #0.000001
+prob_comp_parking = 0.0001 #0.0000001
 
 # Regiones a comprobar (los outputs suelen ser muy grandes)
-numShowRects = 6000
+numShowRects = 15000
 
 # load the class_indices saved in the earlier step
 class_dictionary = np.load('C:\\Users\Andrés\Documents\\UC3M\TFM\GeoLearning\core\outputs_de_modelos\class_indices.npy').item()
 
 # fine tuning model
-model_fine = load_model('C:\\Users\Andrés\Documents\\UC3M\TFM\GeoLearning\modelos\\my_model_dv3_80x80.h5')
+model_fine = load_model('C:\\Users\Andrés\Documents\\UC3M\TFM\GeoLearning\modelos\\my_model_dv3_80x80_2.h5')
 
 #----------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------
@@ -68,11 +68,6 @@ def is_Valid(prob, label):
     # Para cada clase comprueba si las probabilidades de las otras clases son lo suficientemente pequeñas
     # parking - piscina - rotonda
 
-    if label == 'piscina' and max(prob)>prob_minima_piscina:
-        if prob[2] < prob_comp_piscina: # prob de la rotonda es menor
-            valores += 2
-
-
     for ele in prob:
         if label == 'rotonda' and max(prob)>prob_minima_rotonda:
             if ele < prob_comp_rotonda:
@@ -80,11 +75,14 @@ def is_Valid(prob, label):
         if label == 'parking' and max(prob)>prob_minima_parking:
             if ele < prob_comp_parking:
                 valores += 1
+        if label == 'piscina' and max(prob)>prob_minima_piscina:
+            if ele < prob_comp_piscina:
+                valores += 1
 
     if valores == 2:
         valido = True
-    if label == 'parking':
-        valido = False
+    '''if label == 'parking':
+        valido = False'''
 
     return valido
 #----------------------------------------------------------------------------------------

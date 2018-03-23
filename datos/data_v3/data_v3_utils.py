@@ -22,7 +22,7 @@ path_piscina = 'clases/piscina'
 path_parking = 'clases/rotonda'
 path_rotonda = 'clases/rotonda'
 
-ochenta_path = '80x80/'
+ochenta_path = 'set_80x80_2\\train\\rotonda'
 
 # convierte en imagenes las clases
 def crop_class(filename, x, y, w, h,clase):
@@ -82,5 +82,15 @@ def normalizar_imag():
             if file.endswith(".jpg"):
                 resize_small_to_large(root, file)
 
+def png_to_jpg(path):
+    i = 0
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            if file.endswith(".png"):
+                print(file)
+                im = Image.open(os.path.join(path, file))
+                rgb_im = im.convert('RGB')
+                rgb_im.save(os.path.join(path,'rotonda_'+ i.__str__() + '.jpg'))
+                i+=1
 
 normalizar_imag()
