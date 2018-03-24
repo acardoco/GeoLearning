@@ -16,19 +16,19 @@ import cv2
 #general parametters
 #imagenes 400x400 en jpg
 # hay un bug que consiste en que si le paso la imagen desde otra carpeta que no esté dentro de este fichero no detecta el rgb con .split
-ciudadespath = 'ciudades\ciudad7.jpg'
+ciudadespath = 'ciudades\ciudad6.jpg'
 size = 80, 80
 rango = 25 #25
 
 # probabilidades minimas de cada clase para ser mostrada
-prob_minima_piscina = 0.999 #0.5 (1ero) - 0.8
-prob_minima_rotonda = 0.98  #0.9
-prob_minima_parking = 0.999 #.995
+prob_minima_piscina = 0.99 #0.5 (1ero) - 0.8
+prob_minima_rotonda = 0.995  #0.9
+prob_minima_parking = 0.9995 #.995
 
 #Si las otras clases con menor probabilidad superan estos valores, no se considerará un output valido
 prob_comp_piscina = 0.01 #0.000001
-prob_comp_rotonda = 0.005 #0.000001
-prob_comp_parking = 0.0001 #0.0000001
+prob_comp_rotonda = 0.001 #0.000001
+prob_comp_parking = 0.00001 #0.0000001
 
 # Regiones a comprobar (los outputs suelen ser muy grandes)
 numShowRects = 15000
@@ -37,7 +37,7 @@ numShowRects = 15000
 class_dictionary = np.load('C:\\Users\Andrés\Documents\\UC3M\TFM\GeoLearning\core\outputs_de_modelos\class_indices.npy').item()
 
 # fine tuning model
-model_fine = load_model('C:\\Users\Andrés\Documents\\UC3M\TFM\GeoLearning\modelos\\my_model_dv3_80x80_2.h5')
+model_fine = load_model('C:\\Users\Andrés\Documents\\UC3M\TFM\GeoLearning\modelos\\my_model_dv3_80x80_2-2.h5')
 
 #----------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------
@@ -94,7 +94,7 @@ def predictMultiple_fine(image_sat, x, y, w, h):
 
     crop_rectangle = (x, y, w + x , h + y)
     image = image_sat.crop(crop_rectangle)
-    image = image.resize(size, Image.ADAPTIVE)
+    image = image.resize(size, Image.BICUBIC)
     image = img_to_array(image)
 
     # important! otherwise the predictions will be '0'

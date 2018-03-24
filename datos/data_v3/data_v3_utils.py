@@ -73,6 +73,14 @@ def resize_small_to_large(path, file):
 
     cv2.imwrite(os.path.join(path, file), resized_image)
 
+def resize_small_to_large_and_crop(path, x, y , w, h ):
+    original_image = cv2.imread(path,3)
+    new = original_image[y:y + h, x:x + w]
+    resized_image = cv2.resize(new, size_to_convert,
+                               interpolation=cv2.INTER_LANCZOS4)
+
+    return resized_image
+
 
 def normalizar_imag():
 

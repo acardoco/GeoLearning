@@ -22,9 +22,9 @@ img_width, img_height = 80, 80
 #***************************************
 train_data_dir = 'C:\\Users\Andrés\Documents\\UC3M\TFM\GeoLearning\datos\data_v3\set_80x80_2\\train'
 validation_data_dir = 'C:\\Users\Andrés\Documents\\UC3M\TFM\GeoLearning\datos\data_v3\set_80x80_2\\validate'
-nb_train_samples = 1686 #991
-nb_validation_samples = 478 #348
-epochs = 150 #50
+nb_train_samples = 1604 #991
+nb_validation_samples = 455 #348
+epochs = 80 #50
 batch_size = 32 #32
 num_classes = len(np.load('outputs_de_modelos/class_indices.npy').item())
 kernel_size = (3,3)
@@ -92,7 +92,7 @@ model.add(Activation('relu'))
 model.add(MaxPooling2D(pool_size=pooling_size))
 
 #hasta aquí capas iniciales
-
+'''
 model.add(Conv2D(128, kernel_size))
 model.add(Activation('relu'))
 model.add(Dropout(0.5))
@@ -110,7 +110,7 @@ model.add(Activation('relu'))
 model.add(MaxPooling2D(pool_size=(1,1)))
 
 # hasta aquí "algunas capas"
-'''
+
 model.add(Conv2D(512, (1,1)))
 model.add(Activation('relu'))
 model.add(Dropout(0.5))
@@ -227,9 +227,14 @@ DATA_v3
     [0.16494690282550209, 0.94039048865619546] (+) y fuera datos de dataset_v2
     (-)[0.098912827930487224, 0.95397489781035538] con datos de DataAug-rotonda de datasetv2 y 80 epochs ... -> en selecSearch no pilla las rotondas
     [0.98016709552524484, 0.8158995858171495] (-) con más capas
-    (-) algunas capas y 150 epochs
+    (.)[0.15047867573473439, 0.93776824051602203] con data Aug a rotonda "my_model_dv3_80x80_2_prueba" -> ya pilla rotondas
+    [0.19156197065431543, 0.94420600889706308] (.) con algunas capas  "my_model_dv3_80x80_2-2"
+    [0.48811058192513884, 0.87124463605650504] (.) con algunas capas   y 150 epochs
+    [0.21628767510860072, 0.91630901336797832] (.) con algunas capas y 100 epochs
+    (^)[0.1870488715519269, 0.94505494541191792] con algunas capas y algunos ejemplos en rotonda eliminados (71: cosas borrosas o solos partes de rotondas)
+    [0.10224502108150973, 0.95384615411470219] (^) 48x48 "my_model_dv3_80x80_2_prueba_3"
 '''
 #***************************************
-model.save('C:\\Users\Andrés\Documents\\UC3M\TFM\GeoLearning\modelos\my_model_dv3_80x80_2_prueba.h5')
+model.save('C:\\Users\Andrés\Documents\\UC3M\TFM\GeoLearning\modelos\my_model_dv3_80x80_2_prueba_3.h5')
 
 
