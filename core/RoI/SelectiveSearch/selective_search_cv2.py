@@ -18,17 +18,18 @@ import cv2
 # hay un bug que consiste en que si le paso la imagen desde otra carpeta que no esté dentro de este fichero no detecta el rgb con .split
 ciudadespath = 'ciudades\ciudad6.jpg'
 size = 80, 80
-rango = 25 #25
+rango = 35 #25
+rango_rotonda = 40
 
 # probabilidades minimas de cada clase para ser mostrada
 prob_minima_piscina = 0.99 #0.5 (1ero) - 0.8
-prob_minima_rotonda = 0.995  #0.9
-prob_minima_parking = 0.9995 #.995
+prob_minima_rotonda = 0.99997  #0.9
+prob_minima_parking = 0.999 #.995
 
 #Si las otras clases con menor probabilidad superan estos valores, no se considerará un output valido
 prob_comp_piscina = 0.01 #0.000001
-prob_comp_rotonda = 0.001 #0.000001
-prob_comp_parking = 0.00001 #0.0000001
+prob_comp_rotonda = 0.01 #0.000001
+prob_comp_parking = 0.01 #0.0000001
 
 # Regiones a comprobar (los outputs suelen ser muy grandes)
 numShowRects = 15000
@@ -44,14 +45,27 @@ model_fine = load_model('C:\\Users\Andrés\Documents\\UC3M\TFM\GeoLearning\model
 # ******************************Funciones AUXILIARES*************************************
 #----------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------
+#elimina rectángulos demasiado pronunciados en caso de ser rotondas (las rotondas suelen tener bbox cuadrados)
+def rec_pro(x,y,w,h):
+
+    es_pronunciado = False
+
+    ancho = abs(x - w)
+    alto = abs(y - h)
+
+    if abs(ancho-alto) >= rango_rotonda:
+        es_pronunciado = True
+
+    return es_pronunciado
+
 
 # Comprueba si hay boxes con coordenadas muy parecidas
-def is_similar(x, y, h ,w, candidates):
+def is_similar(x, y, w, h, candidates):
 
     lo_es = False
 
     for item in candidates:
-        xi, yi, hi, wi = item[1]
+        xi, yi, wi, hi = item[1]
 
         #if (abs(coord_x-item_x)<rango and abs(coord_y-item_y <rango)):
         if (abs(x-xi) < rango and abs(y-yi) < rango and abs(h-hi) < rango and abs(w-wi) < rango):
@@ -181,7 +195,10 @@ def selec_cv2():
 
             # si cumple con el mínimo de prob, se añade a candidatos
             if is_Valid(prob, label):
-                candidates.add((label,(x, y, w, h)))
+                if label == 'rotonda' and rec_pro(x,y,w,h) == False:
+                    candidates.add((label,(x, y, w, h)))
+                if label =='piscina' or label == 'parking':
+                    candidates.add((label, (x, y, w, h)))
             j += 1
             if (j % 100 == 0):
                 print("Regiones revisadas: ", j)

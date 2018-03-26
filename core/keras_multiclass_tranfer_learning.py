@@ -47,17 +47,17 @@ import cv2
 
 
 # dimensions of our images.
-img_width, img_height = 48, 48
+img_width, img_height = 80, 80
 
-top_model_weights_path = 'bottleneck_fc_model.h5'
-features_train_dir = 'bottleneck_features_train'
-features_validation_dir = 'bottleneck_features_validation'
+top_model_weights_path = 'outputs_de_modelos\\bottleneck_fc_model_dv3.h5'
+features_train_dir = 'outputs_de_modelos\\bottleneck_features_train_dv3'
+features_validation_dir = 'outputs_de_modelos\\bottleneck_features_validation_dv3'
 
-train_data_dir = 'data\\data_augmentation_output\\train'
-validation_data_dir = 'data\\data_augmentation_output\\validate'
+train_data_dir = 'C:\\Users\Andrés\Documents\\UC3M\TFM\GeoLearning\datos\data_v3\set_80x80_2\\train'
+validation_data_dir = 'C:\\Users\Andrés\Documents\\UC3M\TFM\GeoLearning\datos\data_v3\set_80x80_2\\validate'
 
 epochs = 50
-batch_size = 16
+batch_size = 32
 
 def save_bottlebeck_features():
     # build the VGG16 network
@@ -256,7 +256,7 @@ def predict():
 
 save_bottlebeck_features()
 train_top_model()
-predict()
+#predict()
 
 cv2.destroyAllWindows()
 
@@ -279,4 +279,10 @@ Para 48x48 con dataset_v2:
 Para 48x48 con dataset original modificadas imagens de parking:
 [INFO] accuracy: 96.67%
 [INFO] Loss: 0.16513207533776722
+
+
+PAra 80x80 y dataset_v3_2:
+[INFO] accuracy: 99.34%
+[INFO] Loss: 0.0274476484278211
+
 '''
