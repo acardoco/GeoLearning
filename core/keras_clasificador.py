@@ -30,6 +30,7 @@ num_classes = len(np.load('outputs_de_modelos/class_indices.npy').item())
 kernel_size = (3,3)
 pooling_size =(3,3)
 
+
 #***************************************
 # Ajusta las dimensiones en función del orden en el que aparezca el "canal"
 #***************************************
@@ -49,8 +50,8 @@ def print_train_sumary(history):
     # Acierto
 
     plt.subplot(211)
-    plt.plot(history.history['acc'])
-    plt.plot(history.history['val_acc'])
+    plt.plot(history.history['categorical_accuracy'])
+    plt.plot(history.history['val_categorical_accuracy'])
     plt.title('Precisión del modelo')
     plt.ylabel('precisión')
     plt.xlabel('epoch')
@@ -70,121 +71,126 @@ def print_train_sumary(history):
 #***************************************
 # Modelo creado con Keras con 4 Convs, 2 MaxPools y una FC al final
 #***************************************
+def train():
+    model = Sequential()
 
-model = Sequential()
+    # 32 filtros/kernels con tamaño 3x3
+    model.add(Conv2D(32, kernel_size, input_shape=input_shape))
+    model.add(Activation('relu'))
+    # Esta capa ayuda a evitar overfitting
+    #model.add(Dropout(0.5))
 
-# 32 filtros/kernels con tamaño 3x3
-model.add(Conv2D(32, kernel_size, input_shape=input_shape))
-model.add(Activation('relu'))
-# Esta capa ayuda a evitar overfitting
-model.add(Dropout(0.5))
+    model.add(Conv2D(32, kernel_size))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=pooling_size))
 
-model.add(Conv2D(32, kernel_size))
-model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=pooling_size))
+    model.add(Conv2D(64, kernel_size))
+    model.add(Activation('relu'))
+    #model.add(Dropout(0.5))
 
-model.add(Conv2D(64, kernel_size))
-model.add(Activation('relu'))
-model.add(Dropout(0.5))
+    model.add(Conv2D(64, kernel_size))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=pooling_size))
 
-model.add(Conv2D(64, kernel_size))
-model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=pooling_size))
+    #hasta aquí capas iniciales
+    '''
+    model.add(Conv2D(128, kernel_size))
+    model.add(Activation('relu'))
+    #model.add(Dropout(0.5))
 
-#hasta aquí capas iniciales
-'''
-model.add(Conv2D(128, kernel_size))
-model.add(Activation('relu'))
-model.add(Dropout(0.5))
+    model.add(Conv2D(128, kernel_size))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=pooling_size))
 
-model.add(Conv2D(128, kernel_size))
-model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=pooling_size))
+    model.add(Conv2D(256, (1,1)))
+    model.add(Activation('relu'))
+    #model.add(Dropout(0.5))
 
-model.add(Conv2D(256, (1,1)))
-model.add(Activation('relu'))
-model.add(Dropout(0.5))
+    model.add(Conv2D(256, (1,1)))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(1,1)))
 
-model.add(Conv2D(256, (1,1)))
-model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(1,1)))
+    # hasta aquí "algunas capas"
+    
+    model.add(Conv2D(512, (1,1)))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.5))
+    
+    model.add(Conv2D(512, (1,1)))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(1,1)))'''
 
-# hasta aquí "algunas capas"
+    model.add(Flatten())
+    model.add(Dense(256, activation='relu')) #256
+    model.add(Dropout(0.5))
+    model.add(Dense(num_classes,  activation='softmax'))
 
-model.add(Conv2D(512, (1,1)))
-model.add(Activation('relu'))
-model.add(Dropout(0.5))
+    #***************************************
+    # Se indica la función de error, optimizador y métrica a mostrar
+    # "categorical" es para indicar que va a haber más de dos clases
+    #***************************************
+    model.compile(loss='categorical_crossentropy',
+                  optimizer='adam',
+                  metrics=['categorical_accuracy'])
 
-model.add(Conv2D(512, (1,1)))
-model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(1,1)))'''
+    #***************************************
+    # Como es un dataset de imágenes se emplea una clase especial de Keras que permite, entre otras cosas, DataAugmentation
+    #***************************************
 
-model.add(Flatten())
-model.add(Dense(256, activation='relu')) #256
-model.add(Dropout(0.5))
-model.add(Dense(num_classes,  activation='sigmoid'))
+    '''train_datagen = ImageDataGenerator(
+        rescale=1. / 255)'''
+    train_datagen = ImageDataGenerator(
+        rescale=1. / 255,
+        rotation_range=180,
+        width_shift_range=0.2,
+        height_shift_range=0.2,
+        shear_range=0.4,
+        zoom_range=0.2,
+        horizontal_flip=True,
+        fill_mode='nearest')
+
+    # Se reescala las imágenes para pasarlas de que valgan entre 0-255 (RGB) a que tomen valores entre 0-1
+    test_datagen = ImageDataGenerator(rescale=1. / 255)
+
+    # Se "inyectan" los datasets
+    train_generator = train_datagen.flow_from_directory(
+        train_data_dir,
+        target_size=(img_width, img_height),
+        batch_size=batch_size,
+        class_mode='categorical')
+
+    validation_generator = test_datagen.flow_from_directory(
+        validation_data_dir,
+        target_size=(img_width, img_height),
+        batch_size=batch_size,
+        class_mode='categorical')
+    #***************************************
+    # Aquí se compila y entrena el modelo creado
+    #***************************************
+    history = model.fit_generator(
+        train_generator,
+        steps_per_epoch=nb_train_samples // batch_size,
+        epochs=epochs,
+        validation_data=validation_generator,
+        validation_steps=nb_validation_samples // batch_size)
+
+    #***************************************
+    # Se evaluan los resultados
+    #***************************************
+    eval = model.evaluate_generator(validation_generator, 600)
+    print(model.metrics_names)
+    print(eval)
+
+    print_train_sumary(history)
+
+    model.save('C:\\Users\Andrés\Documents\\UC3M\TFM\GeoLearning\modelos\my_model_dv3_80x80_2_prueba_3.h5')
+
+
+train()
+
 
 #***************************************
-# Se indica la función de error, optimizador y métrica a mostrar
-# "categorical" es para indicar que va a haber más de dos clases
-#***************************************
-model.compile(loss='categorical_crossentropy',
-              optimizer='adam',
-              metrics=['accuracy'])
-
-#***************************************
-# Como es un dataset de imágenes se emplea una clase especial de Keras que permite, entre otras cosas, DataAugmentation
-#***************************************
-
-'''train_datagen = ImageDataGenerator(
-    rescale=1. / 255)'''
-train_datagen = ImageDataGenerator(
-    rescale=1. / 255,
-    rotation_range=180,
-    width_shift_range=0.2,
-    height_shift_range=0.2,
-    shear_range=0.4,
-    zoom_range=0.2,
-    horizontal_flip=True,
-    fill_mode='nearest')
-
-# Se reescala las imágenes para pasarlas de que valgan entre 0-255 (RGB) a que tomen valores entre 0-1
-test_datagen = ImageDataGenerator(rescale=1. / 255)
-
-# Se "inyectan" los datasets
-train_generator = train_datagen.flow_from_directory(
-    train_data_dir,
-    target_size=(img_width, img_height),
-    batch_size=batch_size,
-    class_mode='categorical')
-
-validation_generator = test_datagen.flow_from_directory(
-    validation_data_dir,
-    target_size=(img_width, img_height),
-    batch_size=batch_size,
-    class_mode='categorical')
-#***************************************
-# Aquí se compila y entrena el modelo creado
-#***************************************
-history = model.fit_generator(
-    train_generator,
-    steps_per_epoch=nb_train_samples // batch_size,
-    epochs=epochs,
-    validation_data=validation_generator,
-    validation_steps=nb_validation_samples // batch_size)
-
-#***************************************
-# Se evaluan los resultados
-#***************************************
-eval = model.evaluate_generator(validation_generator, 600)
-print(model.metrics_names)
-print(eval)
-
-print_train_sumary(history)
-
-
-#***************************************
-# Se guarda el modelo. Resultados última ejecución:
+# RESULTADOS:
 '''
 40x40:
 ['loss', 'acc']
@@ -232,9 +238,10 @@ DATA_v3
     [0.48811058192513884, 0.87124463605650504] (.) con algunas capas   y 150 epochs
     [0.21628767510860072, 0.91630901336797832] (.) con algunas capas y 100 epochs
     (^)[0.1870488715519269, 0.94505494541191792] con algunas capas y algunos ejemplos en rotonda eliminados (71: cosas borrosas o solos partes de rotondas)
-    [0.10224502108150973, 0.95384615411470219] (^) 48x48 "my_model_dv3_80x80_2_prueba_3"
+    [0.10224502108150973, 0.95384615411470219] (^) 48x48 
+    [0.14441014470530603, 0.94945054981079735] (^) softmax y categorical_accuracy en "my_model_dv3_80x80_2_softmax"
 '''
 #***************************************
-model.save('C:\\Users\Andrés\Documents\\UC3M\TFM\GeoLearning\modelos\my_model_dv3_80x80_2_prueba_3.h5')
+
 
 

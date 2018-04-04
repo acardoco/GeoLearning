@@ -16,7 +16,7 @@ import cv2
 #general parametters
 #imagenes 400x400 en jpg
 # hay un bug que consiste en que si le paso la imagen desde otra carpeta que no esté dentro de este fichero no detecta el rgb con .split
-ciudadespath = 'ciudades\ciudad6.jpg'
+ciudadespath = 'ciudades\ciudad7.jpg'
 size = 80, 80
 rango = 35 #25
 rango_rotonda = 40
