@@ -16,7 +16,7 @@ import cv2
 #general parametters
 #imagenes 400x400 en jpg
 # hay un bug que consiste en que si le paso la imagen desde otra carpeta que no esté dentro de este fichero no detecta el rgb con .split
-ciudadespath = 'ciudades\ciudad7.jpg'
+ciudadespath = 'ciudades\ciudad6.jpg'
 size = 80, 80
 rango = 35 #25
 rango_rotonda = 40
@@ -135,10 +135,10 @@ def predictMultiple_fine(image_sat, x, y, w, h):
 
     return label, probabilities[0]
 
-def selec_cv2():
+def selec_cv2(path_imagen):
 
     # imagen que emplearán los clasificadores
-    im_clasiffier = Image.open(ciudadespath)
+    im_clasiffier = path_imagen
 
 
     # speed-up using multithreads
@@ -146,15 +146,9 @@ def selec_cv2():
     cv2.setNumThreads(4);
 
     # read image
-    im = cv2.imread(ciudadespath)
-    b, g, r = cv2.split(im)
-    im = cv2.merge([r,g,b])
-
-
-    ''''# resize image
-    newHeight = 800
-    newWidth = int(im.shape[1] * 800 / im.shape[0])
-    im = cv2.resize(im, (newWidth, newHeight))'''
+    im = np.array(path_imagen)
+    '''b, g, r = cv2.split(im) #esto si se pasa como path (root/file.jpg)
+    im = cv2.merge([r,g,b])''' # ...
 
     # create Selective Search Segmentation Object using default parameters
     ss = cv2.ximgproc.segmentation.createSelectiveSearchSegmentation()
@@ -196,9 +190,9 @@ def selec_cv2():
             # si cumple con el mínimo de prob, se añade a candidatos
             if is_Valid(prob, label):
                 if label == 'rotonda' and rec_pro(x,y,w,h) == False:
-                    candidates.add((label,(x, y, w, h)))
+                    candidates.add((label,(x, y, w, h),max(prob)))
                 if label =='piscina' or label == 'parking':
-                    candidates.add((label, (x, y, w, h)))
+                    candidates.add((label, (x, y, w, h),max(prob)))
             j += 1
             if (j % 100 == 0):
                 print("Regiones revisadas: ", j)
@@ -228,5 +222,7 @@ def selec_cv2():
 
     plt.show()
 
+    return candidates
+
 if __name__ == "__main__":
-    selec_cv2()
+    selec_cv2(ciudadespath)
