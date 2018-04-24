@@ -11,38 +11,71 @@ from PIL import Image
 
 import json
 import flask
-import io
+import urllib.request as urlr
 
 import core.RoI.SelectiveSearch.selective_search_cv2 as selective_search
 
+# params
+base = 'https://maps.googleapis.com/maps/api/staticmap?center='
+parametros_comunes = '&zoom=18&format=jpg&size=400x400&maptype=satellite&key='
+key = 'AIzaSyB9qW-QzzGtT2xEsJlsuLgA5TOYNJS8ogo'
 
 # initialize our Flask application and the Keras model
 app = flask.Flask(__name__)
+
+@app.route("/")
+def index():
+    """
+    this is a root dir of my server
+    :return: str
+    """
+    return "This is root!!!!"
+@app.route("/prueba", methods = ["POST"])
+def prueba():
+
+    data = {"success": False}
+
+    content = flask.request.json
+    data["candidatos"] = {"lat":"pepe", "lon":"paco","prob":"pipo", "class":"keko"}
+    print(content)
+
+    data["success"] = True
+
+    return flask.jsonify(data)
+
+
 
 @app.route("/predict", methods=["POST"])
 def predict():
 
     data = {"success": False}
 
-    if flask.request.method == 'POST':
-        if flask.request.files.get('image'):
+    # TODO recoger lat y lon en json y hacer peticion a GoogleMapsApi
+    content = flask.request.json
+    lat = content['lat']
+    lon = content['lon']
+    url_rquest = base + lat + ',' + lon + parametros_comunes + key
+    IMAGE_PATH = "tmp/" + lat + '_' + lon +'.jpg'
+    urlr.urlretrieve(url_rquest,IMAGE_PATH)
+    print('Url to: ', url_rquest)
 
-            image = flask.request.files["image"].read() #ERROR EN SERVIDOR: TENGO QUE GUARDARLA O SI NO VA A CASCAR !!!
-            image = Image.open(io.BytesIO(image))
+    # QUITAR estas 2 lineas EN LA VERSION FINAL
+    # IMAGE_PATH = "ciudades\ciudad6.jpg"
+    image = Image.open(IMAGE_PATH)
 
-            #selective search
-            candidates = selective_search.selec_cv2(image)
+    #selective search
+    candidates = selective_search.selec_cv2(image)
 
-            data["candidatos"] = []
+    data["candidatos"] = []
 
-            for item in candidates:
-                label = item[0]
-                x, y, w, h = item[1]
-                prob = item[2]
-                r = {"label": label, "x": int(x), "y": int(y), "w": int(w), "h": int(h), "prob": float(prob)}
-                data["candidatos"].append(r)
+    for item in candidates:
+        label = item[0]
+        x, y, w, h = item[1]
+        prob = item[2]
+        r = {"label": label, "x": int(x), "y": int(y), "w": int(w), "h": int(h), "prob": float(prob)}
+        data["candidatos"].append(r)
 
-            data["success"] = True
+    data["success"] = True
 
     return flask.jsonify(data)
 
@@ -51,4 +84,4 @@ def predict():
 if __name__ == "__main__":
 	print(("* Loading Keras model and Flask starting server..."
 		"please wait until server has fully started"))
-	app.run()
+	app.run(host='0.0.0.0')
