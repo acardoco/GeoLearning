@@ -15,7 +15,7 @@ import numpy as np
 #***************************************
 # Dimensiones generales de las imagenes
 #***************************************
-img_width, img_height = 80, 80
+img_width, img_height = 48, 48
 
 #***************************************
 # Parámetros generales
@@ -123,7 +123,7 @@ def train():
     model.add(Flatten())
     model.add(Dense(256, activation='relu')) #256
     model.add(Dropout(0.5))
-    model.add(Dense(num_classes,  activation='softmax'))
+    model.add(Dense(num_classes,  activation='sigmoid'))
 
     #***************************************
     # Se indica la función de error, optimizador y métrica a mostrar
@@ -183,7 +183,7 @@ def train():
 
     print_train_sumary(history)
 
-    model.save('C:\\Users\Andrés\Documents\\UC3M\TFM\GeoLearning\modelos\my_model_dv3_80x80_2_prueba_3.h5')
+    model.save('C:\\Users\Andrés\Documents\\UC3M\TFM\GeoLearning\modelos\my_model_dv3_48x48_2-2.h5')
 
 
 train()
@@ -240,6 +240,7 @@ DATA_v3
     (^)[0.1870488715519269, 0.94505494541191792] con algunas capas y algunos ejemplos en rotonda eliminados (71: cosas borrosas o solos partes de rotondas)
     [0.10224502108150973, 0.95384615411470219] (^) 48x48 
     [0.14441014470530603, 0.94945054981079735] (^) softmax y categorical_accuracy en "my_model_dv3_80x80_2_softmax"
+    [0.12023721383903099, 0.9648351650447636]  48x48 sin algunas capas en "my_model_dv3_48x48_2-2"
 '''
 #***************************************
 

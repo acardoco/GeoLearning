@@ -59,12 +59,8 @@ def predict():
     urlr.urlretrieve(url_rquest,IMAGE_PATH)
     print('Url to: ', url_rquest)
 
-    # QUITAR estas 2 lineas EN LA VERSION FINAL
-    # IMAGE_PATH = "ciudades\ciudad6.jpg"
-    image = Image.open(IMAGE_PATH)
-
     #selective search
-    candidates = selective_search.selec_cv2(image)
+    candidates = selective_search.selec_cv2(IMAGE_PATH)
 
     data["candidatos"] = []
 
@@ -74,6 +70,43 @@ def predict():
         prob = item[2]
         r = {"label": label, "x": int(x), "y": int(y), "w": int(w), "h": int(h), "prob": float(prob)}
         data["candidatos"].append(r)
+
+    data["success"] = True
+
+    return flask.jsonify(data)
+
+@app.route("/predict_query", methods=["POST"])
+def predict_query():
+
+    data = {"success": False}
+    data["candidatos"] = []
+
+    # TODO recoger lat y lon en json y hacer peticion a GoogleMapsApi
+    for item in flask.request.json['coordenadas']:
+
+        id = item['id']
+        lat = item['lat']
+        lon = item['lon']
+
+        url_rquest = base + lat + ',' + lon + parametros_comunes + key
+        IMAGE_PATH = "tmp/" + lat + '_' + lon +'.jpg'
+        urlr.urlretrieve(url_rquest,IMAGE_PATH)
+        print('Url to: ', url_rquest)
+
+        #selective search
+        candidates = selective_search.selec_cv2(IMAGE_PATH)
+
+        for item in candidates:
+            label = item[0]
+            x, y, w, h = item[1]
+            prob = item[2]
+            a,b,r = item[3]
+            r = {"id": id, "label": label,
+                 "x": int(x), "y": int(y), "w": int(w), "h": int(h),
+                 "prob": float(prob),
+                 "a": int(a), "b": int(b), "r": int(r)
+                 }
+            data["candidatos"].append(r)
 
     data["success"] = True
 

@@ -12,13 +12,24 @@ Moverse hacia arriba
 Ejemplo 1280x1280 (lo de scale=2):
 
 40.3325353,-3.7785943
-[+|-]26700 en latitud para moverse arriba o abajo
+[+|-]26700 en latitud para moverse arriba o abajo en x640
 40.3352053,-3.7785943
 
+lat -> 16688 en x400 --> /2 desde el punto central
+lon -> 21938 en x400
 
-[+|-]35100 en longitud para moverse derecha o izquierda
+
+[+|-]35100 en longitud para moverse derecha o izquierda en x640
 40.3352053,-3.7821043
 
+
+13.52402/2.11062 AFRICA
+
+
+ground_resolution = (cos(Latitude * pi/180) * 2 * pi * 6378137) / (256 * 2 ^ zoomLevel) (metros por pixel) = 0,12049877976624851886822240651165
+
+
+0.5972 Ground Resolution (meters / pixel)
 
 '''
 

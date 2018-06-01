@@ -17,22 +17,22 @@ from PIL import Image
 import time
 
 #general parametters
-ciudadespath = 'pruebas/ciudades/ciudad6.jpg'
+ciudadespath = 'ciudades/ciudad6.jpg'
 top_model_weights_path = 'bottleneck_fc_model.h5' 
-size = 48, 48
+size = 80, 80
 prob_minima = 0.8
 
 # load the class_indices saved in the earlier step
-model_clasificador = load_model('my_model_v4.h5')
+model_clasificador = load_model('C:\\Users\Andrés\Documents\\UC3M\TFM\GeoLearning\modelos\\my_model_dv3_80x80_2-2.h5')
 
 # fine tuning model
-model_fine = load_model('fine_tuning_18_48x48.h5')
+model_fine = load_model('C:\\Users\Andrés\Documents\\UC3M\TFM\GeoLearning\modelos\mejores modelos\\fine_tuning_18_48x48.h5')
 
 # build the VGG16 network
 model_vgg16 = applications.VGG16(include_top=False, weights='imagenet')
 
 # load the class_indices saved in the earlier step
-class_dictionary = np.load('class_indices.npy').item()
+class_dictionary = np.load('C:\\Users\Andrés\Documents\\UC3M\TFM\GeoLearning\core\outputs_de_modelos\class_indices.npy').item()
 
 #carga la imagen para el algoritmo de selective search
 def load_image( infilename ) :
@@ -49,7 +49,7 @@ def is_Valid(prob):
 
     if max(prob) > prob_minima:
         for ele in prob:
-            if ele < 0.00001:
+            if ele < 0.01:
                 valores += 1
 
     if valores == 2:
@@ -57,23 +57,21 @@ def is_Valid(prob):
 
     return valido
 
-def is_Valid(prob, label):
+'''def is_Valid(prob, label):
 
     valido = True
 
     valores = 0
 
-    '''if max(prob) > prob_minima:
+    if max(prob) > prob_minima:
         for ele in prob:
             if ele < 0.00001:
                 valores += 1
 
     if valores == 2:
-        valido = True'''
-    if label == 'parking':
-        valido = False
+        valido = True
 
-    return valido
+    return valido'''
 
 
 #----------------------------------------------------------------------------------------
@@ -190,7 +188,7 @@ def predictMultiple_clasificador(image_sat, x, y, w, h):
 
     label = inv_map[inID]
 
-    if is_Valid(probabilities[0],label):
+    if is_Valid(probabilities[0]):
         # get the prediction label
         print("Image ID: {}, Label: {}".format(inID, label))
 
@@ -230,10 +228,10 @@ def main():
         if w / h > 1.2 or h / w > 1.2:
             continue
         #calling the clasiffier
-        label, prob = predictMultiple_fine(im_clasiffier,x, y, w, h)
+        label, prob = predictMultiple_clasificador(im_clasiffier,x, y, w, h)
 
         #si cumple con el mínimo de prob, se añade a candidatos
-        if is_Valid(prob,label):
+        if is_Valid(prob):
             candidates.add(r['rect'])
         i += 1
         if (i % 100 == 0):
